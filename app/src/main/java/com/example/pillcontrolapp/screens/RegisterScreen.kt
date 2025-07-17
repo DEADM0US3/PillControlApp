@@ -32,13 +32,13 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import com.example.pillcontrolapp.R
 import com.example.pillcontrolapp.viewModels.SupabaseAuthViewModel
 
 @Composable
 fun RegisterScreen(
-    navController: NavController,
+    navController: NavHostController,
     onLoginSuccess: () -> Unit = {},
     viewModel: SupabaseAuthViewModel = viewModel(),
 
@@ -93,14 +93,12 @@ fun RegisterScreen(
                 label = { Text("Nombre de Usuario") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                visualTransformation = PasswordVisualTransformation(),
                 colors = TextFieldDefaults.colors(
                     cursorColor = Color(0xFFDF7A92),
                     focusedIndicatorColor = Color(0xFFDF7A92),
                     unfocusedIndicatorColor = Color(0xFFDF7A92),
                     focusedLabelColor = Color(0xFFDF7A92))
             )
-
         }
 
         Spacer(modifier = Modifier.height(16.dp))

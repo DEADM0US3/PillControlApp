@@ -31,13 +31,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import com.example.pillcontrolapp.R
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pillcontrolapp.viewModels.SupabaseAuthViewModel
 
 @Composable
-fun LoginScreen(navController: NavController,
+fun LoginScreen(navController: NavHostController,
                 onLoginSuccess: () -> Unit = {},
                 viewModel: SupabaseAuthViewModel = viewModel()
 ) {
@@ -121,7 +121,6 @@ fun LoginScreen(navController: NavController,
                     unfocusedIndicatorColor = Color(0xFFDF7A92),
                     focusedLabelColor = Color(0xFFDF7A92))
             )
-
         }
 
         Spacer(modifier = Modifier.height(16.dp))

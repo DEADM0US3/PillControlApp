@@ -13,7 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import com.example.pillcontrolapp.ui.theme.PillControlAppTheme
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -34,7 +34,7 @@ class MainActivity : ComponentActivity() {
 
                 NavHost(navController = navController, startDestination = "login") {
                     composable("home") {
-                        MainScreen()
+                        MainScreen(navController)
                     }
                     composable("login") {
                         LoginScreen(navController)
@@ -55,9 +55,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MainScreen() {
-    val navController = rememberNavController()
-
+fun MainScreen(navController: NavHostController) {
     Scaffold(
         bottomBar = {
             BottomNavigationBar(navController = navController)
@@ -91,7 +89,7 @@ fun ProfileScreen() {
 }
 
 @Composable
-fun DetailsScreen(navController: NavController) {
+fun DetailsScreen(navController: NavHostController) {
     Scaffold {
         Text(
             text = "Details Screen",
