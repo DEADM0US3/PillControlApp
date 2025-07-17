@@ -32,9 +32,9 @@ class MainActivity : ComponentActivity() {
             PillControlAppTheme {
                 val navController = rememberNavController()
 
-                NavHost(navController = navController, startDestination = "home") {
+                NavHost(navController = navController, startDestination = "login") {
                     composable("home") {
-                        MainScreen(navController)
+                        MainScreen()
                     }
                     composable("login") {
                         LoginScreen(navController)
@@ -55,7 +55,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MainScreen(navController: NavController) {
+fun MainScreen() {
     val navController = rememberNavController()
 
     Scaffold(

@@ -25,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -32,9 +33,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.pillcontrolapp.R
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.pillcontrolapp.viewModels.SupabaseAuthViewModel
 
 @Composable
-fun LoginScreen(navController: NavController, onLoginSuccess: () -> Unit = {}) {
+fun LoginScreen(navController: NavController,
+                onLoginSuccess: () -> Unit = {},
+                viewModel: SupabaseAuthViewModel = viewModel()
+) {
+    val context = LocalContext.current
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -122,7 +129,12 @@ fun LoginScreen(navController: NavController, onLoginSuccess: () -> Unit = {}) {
         Button(
             onClick = {
                 if (email.isNotBlank() && password.isNotBlank()) {
-                    // Simular login exitoso
+                    viewModel.login(
+                        context,
+                        userEmail =  email,
+                        userPassword = password,
+                    )
+
                     errorMessage = null
                     onLoginSuccess()
                 } else {
