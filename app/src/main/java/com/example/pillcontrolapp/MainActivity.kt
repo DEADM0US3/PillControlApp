@@ -4,14 +4,25 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavController
 import com.example.pillcontrolapp.ui.theme.PillControlAppTheme
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.pillcontrolapp.components.BottomNavigationBar
+import com.example.pillcontrolapp.screens.HomeScreen
+import com.example.pillcontrolapp.screens.LoadingScreen
+import com.example.pillcontrolapp.screens.LoginScreen
+import com.example.pillcontrolapp.screens.RegisterScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,11 +30,24 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             PillControlAppTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                val navController = rememberNavController()
+
+                NavHost(navController = navController, startDestination = "home") {
+                    composable("home") {
+                        MainScreen(navController)
+                    }
+                    composable("login") {
+                        LoginScreen(navController)
+                    }
+                    composable("register") {
+                        RegisterScreen(navController)
+                    }
+                    composable("details") {
+                        DetailsScreen(navController)
+                    }
+                    composable("loading") {
+                        LoadingScreen(navController)
+                    }
                 }
             }
         }
@@ -31,17 +55,54 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+fun MainScreen(navController: NavController) {
+    val navController = rememberNavController()
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    PillControlAppTheme {
-        Greeting("Android")
+    Scaffold(
+        bottomBar = {
+            BottomNavigationBar(navController = navController)
+        }
+    ) { innerPadding ->
+        NavHost(
+            navController,
+            startDestination = "home",
+            Modifier.padding(innerPadding)
+        ) {
+            composable("home") { HomeScreen(navController) }
+            composable("search") { SearchScreen() }
+            composable("profile") { ProfileScreen() }
+        }
     }
 }
+
+
+@Composable
+fun SearchScreen() {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text("Pantalla de Buscar")
+    }
+}
+
+@Composable
+fun ProfileScreen() {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text("Pantalla de Perfil")
+    }
+}
+
+@Composable
+fun DetailsScreen(navController: NavController) {
+    Scaffold {
+        Text(
+            text = "Details Screen",
+            modifier = Modifier
+                .padding(it)
+        )
+
+        Button(onClick = { navController.popBackStack() }) {
+            Text("Back to Home")
+        }
+    }
+}
+
+
