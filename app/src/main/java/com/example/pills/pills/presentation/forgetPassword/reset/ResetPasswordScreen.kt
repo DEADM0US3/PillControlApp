@@ -3,144 +3,120 @@ package com.example.pills.pills.presentation.forgetPassword.reset
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
-import androidx.compose.material.icons.outlined.Email
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.pills.R
 import org.koin.androidx.compose.koinViewModel
-
 
 @Composable
 fun ForgetPasswordScreen(
     navigateToLogin: () -> Unit,
     navigateToOtp: (String) -> Unit
 ) {
-
     val viewModel: ResetPasswordViewModel = koinViewModel()
-
     val state = viewModel.stateFlow.collectAsState().value
-
     val context = LocalContext.current
 
-    // Handle validation success event to trigger navigation
     LaunchedEffect(key1 = context) {
         viewModel.validationEvents.collect { event ->
-            when (event) {
-                is ResetPasswordViewModel.ValidationEvent.Success -> {
-                    Toast.makeText(context, "OTP Sent successfully", Toast.LENGTH_SHORT).show()
-                    navigateToOtp(event.email)
-                }
+            if (event is ResetPasswordViewModel.ValidationEvent.Success) {
+                Toast.makeText(context, "OTP enviado correctamente", Toast.LENGTH_SHORT).show()
+                navigateToOtp(event.email)
             }
         }
     }
 
     Scaffold(
         topBar = {
-            Column{
+            Column {
                 Spacer(modifier = Modifier.height(12.dp))
                 IconButton(
-                    onClick = {navigateToLogin()}
+                    onClick = { navigateToLogin() }
                 ) {
-
                     Icon(
                         imageVector = Icons.Default.ArrowBackIosNew,
                         contentDescription = "Back Arrow",
-                        tint = Color.Black
+                        tint = Color.White
                     )
                 }
             }
-
-        }
+        },
+        containerColor = Color(0xFFD56A83)
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFFAFAFA))
-                .padding(16.dp)
+                .padding(padding)
+                .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(90.dp))
-            // Welcome Text
+            Icon(
+                painter = painterResource(id = R.drawable.pillcontrollogo),
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(200.dp)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "Reset your password",
-                style = MaterialTheme.typography.headlineMedium,
+                text = "Restablecer contraseña",
+                fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black
+                color = Color.White
             )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Subtext
-            Text(
-                text = "Please enter your email and we will send an OTP code in the next step to reset your password",
-                fontSize = 14.sp,
-                color = Color.Black
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Email Field
+            Spacer(modifier = Modifier.height(16.dp))
             OutlinedTextField(
                 value = state.email,
-                onValueChange = {viewModel.onEvent(ForgetPasswordFormEvent.EmailChanged(it))},
+                onValueChange = { viewModel.onEvent(ForgetPasswordFormEvent.EmailChanged(it)) },
                 isError = state.emailError != null,
                 shape = CircleShape,
-                label = { Text("Email Address") },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Outlined.Email,
-                        contentDescription = "Email Icon"
-                    )
-                },
+                label = { Text("Correo Electrónico") },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                colors = TextFieldDefaults.colors(
+                    unfocusedContainerColor = Color.Transparent,
+                    focusedContainerColor = Color.Transparent,
+                    cursorColor = Color(0xFFDF7A92),
+                    focusedIndicatorColor = Color(0xFFDF7A92),
+                    unfocusedIndicatorColor = Color(0xFFDF7A92),
+                    focusedLabelColor = Color(0xFFDF7A92)
+                )
             )
             if (state.emailError != null) {
                 Text(
                     text = state.emailError,
-                    color = MaterialTheme.colorScheme.error,
+                    color = Color.White,
                     modifier = Modifier.padding(horizontal = 22.dp),
                     fontSize = 14.sp
                 )
             }
-
             Spacer(modifier = Modifier.height(24.dp))
-
-            // Continue Button
             Button(
-                onClick = { viewModel.onEvent(ForgetPasswordFormEvent.Submit)/* Handle sign in */ },
+                onClick = { viewModel.onEvent(ForgetPasswordFormEvent.Submit) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0e5ef5)) // Dark blue color
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF36F9D))
             ) {
-                Text(text = "Sent OTP", color = Color.White, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.width(10.dp))
-                if (state.isLoading == true){
+                if (state.isLoading == true) {
                     CircularProgressIndicator(
                         strokeWidth = 2.dp,
                         color = Color.White,
                         modifier = Modifier.size(24.dp)
                     )
+                    Spacer(modifier = Modifier.width(10.dp))
                 }
+                Text(text = "Enviar OTP", color = Color.White, fontWeight = FontWeight.Bold)
             }
         }
     }

@@ -40,9 +40,6 @@ class LoginViewModel(
             is LoginFormEvent.Submit -> {
                 submitData()
             }
-            is LoginFormEvent.GoogleSignIn -> {
-                googleSignIn(event.activity)
-            }
         }
     }
 
@@ -68,15 +65,16 @@ class LoginViewModel(
 
         viewModelScope.launch {
             // Check if the email exists in public.users table.
-            val emailExists = resetPasswordRepository.isEmailInPublicUsersTable(state.email)
-            if (!emailExists) {
-                state = state.copy(
-                    emailError = "Email do not exists.",
-                    isLoading = false,
-                    passwordError = passwordResult.errorMessage
-                )
-                return@launch
-            }
+
+//            val emailExists = resetPasswordRepository.isEmailInPublicUsersTable(state.email)
+//            if (!emailExists) {
+//                state = state.copy(
+//                    emailError = "Email do not exists.",
+//                    isLoading = false,
+//                    passwordError = passwordResult.errorMessage
+//                )
+//                return@launch
+//            }
 
             // Proceed with login if the email exists.
             val loginResult = loginRepository.loginUser(state.email, state.password)
@@ -97,32 +95,6 @@ class LoginViewModel(
                     )
                 }
             )
-        }
-    }
-
-    private fun googleSignIn(activity: Activity) {
-        viewModelScope.launch {
-            // Set the loading state for Google sign-in to true.
-            state = state.copy(isGoogleLoading = true)
-
-            val result = loginRepository.googleSignIn(activity)
-
-            // Reset the Google loading state when the process completes.
-            state = state.copy(isGoogleLoading = false)
-
-            if (result.isSuccess) {
-                validationEventChannel.send(ValidationEvent.Success("Google user"))
-            } else {
-                // Get the error message.
-                val error = result.exceptionOrNull()?.localizedMessage ?: "Google sign-in failed"
-                // Check if error message indicates cancellation/dismissal.
-                if (
-                    !error.contains("cancelled", ignoreCase = true)
-                ) {
-                    validationEventChannel.send(ValidationEvent.Failure(error))
-                }
-                // Else: ignore error if it appears to be user cancellation.
-            }
         }
     }
 
