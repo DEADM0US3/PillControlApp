@@ -12,22 +12,30 @@ import com.example.pills.pills.presentation.forgetPassword.setNew.SetPasswordScr
 import com.example.pills.pills.presentation.login.LoginScreen
 import com.example.pills.pills.presentation.otpVerification.OtpVerificationScreen
 import com.example.pills.pills.presentation.signUp.SignUpScreen
+import com.example.pills.pills.presentation.calendar.CalendarScreen
+import com.example.pills.pills.presentation.components.BottomNavBar
+import androidx.compose.runtime.getValue
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import com.example.pills.pills.presentation.profile.ProfileScreen
+
 
 @Composable
 fun AuthNavigation(
     startDestination: String
 ) {
     val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
 
     NavHost(navController = navController, startDestination = startDestination) {
 
         // Login Screen
         composable(
-            route = Screen.Login.route,
-            enterTransition = { defaultEnterTransition() },
-            exitTransition = { defaultExitTransition() },
-            popEnterTransition = { defaultPopEnterTransition() },
-            popExitTransition = { defaultPopExitTransition() }
+            route = Screen.Login.route
         ) {
             LoginScreen(
                 navigateToSignUp = { navController.navigate(Screen.SignUp.route) },
@@ -47,11 +55,7 @@ fun AuthNavigation(
 
         // Sign-Up Screen
         composable(
-            route = Screen.SignUp.route,
-            enterTransition = { defaultEnterTransition() },
-            exitTransition = { defaultExitTransition() },
-            popEnterTransition = { defaultPopEnterTransition() },
-            popExitTransition = { defaultPopExitTransition() }
+            route = Screen.SignUp.route
         ) {
             SignUpScreen(
                 navigateToLogin = { navController.navigate(Screen.Login.route) },
@@ -67,11 +71,7 @@ fun AuthNavigation(
             arguments = listOf(
                 navArgument("email") { type = NavType.StringType },
                 navArgument("flow") { type = NavType.StringType }
-            ),
-            enterTransition = { defaultEnterTransition() },
-            exitTransition = { defaultExitTransition() },
-            popEnterTransition = { defaultPopEnterTransition() },
-            popExitTransition = { defaultPopExitTransition() }
+            )
         ) {backStackEntry ->
             val email = backStackEntry.arguments?.getString("email") ?: ""
             val flow = backStackEntry.arguments?.getString("flow") ?: "signup"
@@ -81,20 +81,16 @@ fun AuthNavigation(
                 flow = flow,
                 navigateAfterOtp = {
                     if (flow == "login") {
-                        // If coming from login, after successful OTP verification, go to Home
                         navController.navigate(Screen.HomeScreen.route) {
                             popUpTo(Screen.Login.route) { inclusive = true }
                         }
                     }
                     else if(flow == "reset"){
-                        // If coming from reset password, after successful OTP verification, go to Home
                         navController.navigate(Screen.SetNewPassword.route) {
                             popUpTo(Screen.ResetPassword.route) { inclusive = true }
                         }
                     }
-
                     else {
-                        // If coming from sign-up, after OTP verification, go to Login
                         navController.navigate(Screen.Login.route) {
                             popUpTo(Screen.Login.route) { inclusive = true }
                         }
@@ -104,14 +100,9 @@ fun AuthNavigation(
             )
         }
 
-
         // Reset Password Screen
         composable(
-            route = Screen.ResetPassword.route,
-            enterTransition = { verticalEnterTransition() },
-            exitTransition = { verticalExitTransition() },
-            popEnterTransition = { defaultPopEnterTransition() },
-            popExitTransition = { defaultPopExitTransition() }
+            route = Screen.ResetPassword.route
         ) {
             ForgetPasswordScreen(
                 navigateToLogin = { navController.navigate(Screen.Login.route) },
@@ -123,11 +114,7 @@ fun AuthNavigation(
 
         // Set New Password Screen
         composable(
-            route = Screen.SetNewPassword.route,
-            enterTransition = { defaultEnterTransition() },
-            exitTransition = { defaultExitTransition() },
-            popEnterTransition = { defaultPopEnterTransition() },
-            popExitTransition = { defaultPopExitTransition() }
+            route = Screen.SetNewPassword.route
         ){
             SetPasswordScreen(
                 navigateToLogin = {
@@ -141,19 +128,58 @@ fun AuthNavigation(
 
         // Home Screen
         composable(
-            route = Screen.HomeScreen.route,
-            enterTransition = { defaultEnterTransition() },
-            exitTransition = { defaultExitTransition() },
-            popEnterTransition = { defaultPopEnterTransition() },
-            popExitTransition = { defaultPopExitTransition() }
+            route = Screen.HomeScreen.route
         ) {
-            HomeScreen(
-                navigateToLogin = {
-                    navController.navigate(Screen.Login.route) {
-                        popUpTo(0) // Clears the backstack if needed.
-                    }
+            Column(modifier = Modifier.fillMaxSize()) {
+                Box(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    HomeScreen(
+                        navigateToLogin = {
+                            navController.navigate(Screen.Login.route) {
+                                popUpTo(0) // Clears the backstack if needed.
+                            }
+                        }
+                    )
                 }
-            )
+                BottomNavBar(currentRoute = currentRoute ?: "", onNavigate = { route ->
+                    if (route != currentRoute) navController.navigate(route)
+                })
+            }
+        }
+
+        // Calendar Screen
+        composable(
+            route = Screen.CalendarScreen.route
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                Box(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    CalendarScreen(
+                        onDayClick = { /* TODO: Navegar a detalles del día */ }
+                    )
+                }
+                BottomNavBar(currentRoute = currentRoute ?: "", onNavigate = { route ->
+                    if (route != currentRoute) navController.navigate(route)
+                })
+            }
+        }
+
+        // Profile Screen
+        composable(
+            route = Screen.ProfileScreen.route
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                Box(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    ProfileScreen()
+                }
+                BottomNavBar(currentRoute = currentRoute ?: "", onNavigate = { route ->
+                    if (route != currentRoute) navController.navigate(route)
+                })
+            }
         }
     }
 }

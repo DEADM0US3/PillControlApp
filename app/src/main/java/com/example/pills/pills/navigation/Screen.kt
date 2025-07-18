@@ -9,4 +9,6 @@ sealed class Screen(val route: String) {
 
     object OtpVerification: Screen("otpVerify")
     object HomeScreen: Screen("homeScreen")
+    object CalendarScreen: Screen("calendarScreen")
+    object ProfileScreen: Screen("profileScreen")
 }
