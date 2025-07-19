@@ -15,6 +15,7 @@ import com.example.pills.pills.presentation.login.LoginViewModel
 import com.example.pills.pills.presentation.main.MainViewModel
 import com.example.pills.pills.presentation.otpVerification.OtpViewModel
 import com.example.pills.pills.presentation.signUp.SignUpViewModel
+import com.example.pills.pills.presentation.profile.EditProfileViewModel
 import com.example.pills.homePage.HomeViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.factoryOf
@@ -62,4 +63,5 @@ val viewModelModule = module {
     viewModelOf(::MainViewModel)
     viewModelOf(::ResetPasswordViewModel)
     viewModelOf(::SetPasswordViewModel)
+    viewModelOf(::EditProfileViewModel)
 }
