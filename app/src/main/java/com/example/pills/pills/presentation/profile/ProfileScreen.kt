@@ -18,18 +18,25 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pills.R
+import com.example.pills.homePage.HomeViewModel
+import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun ProfileScreen(
     userName: String = "Laura Torres",
+    navigateToLogin: () -> Unit,
     onEditProfile: () -> Unit = {},
     onHelp: () -> Unit = {},
     onSettings: () -> Unit = {},
     onLogout: () -> Unit = {},
     isPetActive: Boolean = true,
-    onPetActiveChange: (Boolean) -> Unit = {}
+    onPetActiveChange: (Boolean) -> Unit = {},
+    homeViewModel: HomeViewModel = koinViewModel()
 ) {
     var petActive by remember { mutableStateOf(isPetActive) }
+    val coroutineScope = rememberCoroutineScope()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -101,7 +108,13 @@ fun ProfileScreen(
         Spacer(modifier = Modifier.height(32.dp))
         // Botón cerrar sesión
         Button(
-            onClick = onLogout,
+            onClick = {
+                coroutineScope.launch {
+                    homeViewModel.logout {
+                        navigateToLogin()
+                    }
+                }
+            },
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF48FB1)),
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier.fillMaxWidth()

@@ -2,6 +2,7 @@ package com.example.pills.homePage
 
 
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -43,10 +44,12 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.pills.R
 import com.example.pills.ui.theme.Pink
 import com.example.pills.ui.theme.Black
 import com.example.pills.ui.theme.GrayText
@@ -126,7 +129,6 @@ fun ProtectionStatusSection() {
             .shadow(2.dp, RoundedCornerShape(16.dp))
             .clip(RoundedCornerShape(16.dp))
             .background(Color.White)
-            .border(2.dp, Pink, RoundedCornerShape(16.dp))
             .padding(12.dp)
     ) {
         Column {
@@ -177,26 +179,22 @@ fun PillTakingSection() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .shadow(2.dp, RoundedCornerShape(16.dp))
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(20.dp))
             .background(Color.White)
-            .border(2.dp, Pink, RoundedCornerShape(16.dp))
-            .padding(10.dp)
+            .padding(20.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            // Icono de reloj (reemplaza por tu SVG)
+            // Icono de reloj
             Box(
                 modifier = Modifier
-                    .size(54.dp)
+                    .size(60.dp)
                     .clip(CircleShape)
-                    .background(LightGray),
+                    .background(PinkLight),
                 contentAlignment = Alignment.Center
             ) {
-                // TODO: Reemplazar por tu SVG de reloj en caso que quieren que sea identico con el diseño jeje
-                // Icon(painterResource(id = R.drawable.ic_clock), contentDescription = "Reloj")
-                Text("🕒", fontSize = 32.sp)
+                Text("🕒", fontSize = 36.sp)
             }
-            Spacer(modifier = Modifier.width(10.dp))
+            Spacer(modifier = Modifier.width(16.dp))
             Column(
                 modifier = Modifier.weight(1f),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -216,57 +214,36 @@ fun PillTakingSection() {
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center
                 )
-                Spacer(modifier = Modifier.height(2.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    // Hora con fondo rosa claro y dígitos grandes
+                    // Hora con fondo rosa claro
                     Box(
                         modifier = Modifier
-                            .background(PinkLight, RoundedCornerShape(6.dp))
-                            .padding(horizontal = 4.dp, vertical = 2.dp)
+                            .background(PinkLight, RoundedCornerShape(12.dp))
+                            .padding(horizontal = 12.dp, vertical = 6.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                "08",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 20.sp,
-                                color = Black
-                            )
+                            Text("8", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Black)
                             Text(":", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Pink)
-                            Text(
-                                "30",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 20.sp,
-                                color = Black
-                            )
+                            Text("30", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Black)
                         }
                     }
-                    Text(
-                        "Pm",
-                        color = GrayText,
-                        fontSize = 14.sp,
-                        modifier = Modifier.padding(start = 4.dp)
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
+                    Text("Pm", color = GrayText, fontSize = 14.sp, modifier = Modifier.padding(start = 4.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
                     Button(
                         onClick = { /* TODO: Registrar toma */ },
                         colors = ButtonDefaults.buttonColors(containerColor = Pink),
-                        shape = RoundedCornerShape(12.dp),
-                        elevation = ButtonDefaults.buttonElevation(6.dp),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 2.dp)
+                        shape = RoundedCornerShape(16.dp),
+                        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp)
                     ) {
-                        Text(
-                            "Registrar toma",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp
-                        )
+                        Text("Registrar toma", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                     }
                 }
-                Spacer(modifier = Modifier.height(2.dp))
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "Próxima toma en 02:00 hrs",
                     color = GrayText,
@@ -296,7 +273,6 @@ fun StatusCard(title: String, content: String) {
             .shadow(2.dp, RoundedCornerShape(16.dp))
             .clip(RoundedCornerShape(16.dp))
             .background(Color.White)
-            .border(2.dp, Pink, RoundedCornerShape(16.dp))
             .padding(12.dp)
     ) {
         Column {
@@ -317,7 +293,6 @@ fun RecentTakesGraph() {
             .shadow(2.dp, RoundedCornerShape(16.dp))
             .clip(RoundedCornerShape(16.dp))
             .background(Color.White)
-            .border(2.dp, Pink, RoundedCornerShape(16.dp))
             .padding(12.dp)
     ) {
         Column {
@@ -351,7 +326,6 @@ fun FriendsListSection() {
             .shadow(2.dp, RoundedCornerShape(16.dp))
             .clip(RoundedCornerShape(16.dp))
             .background(Color.White)
-            .border(2.dp, Pink, RoundedCornerShape(16.dp))
             .padding(12.dp)
     ) {
         Column {
@@ -399,9 +373,14 @@ fun CircleAvatar() {
         modifier = Modifier
             .size(40.dp)
             .clip(CircleShape)
-            .background(Color(0xFFE0E0E0)),
+            .background(Color(0xFFB3E5FC)),
         contentAlignment = Alignment.Center
     ) {
-        Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(24.dp))
+        // Puedes reemplazar painterResource(R.drawable.ic_profile) por tu imagen
+        Image(
+            painter = painterResource(id = R.drawable.ic_launcher_foreground),
+            contentDescription = "Foto de perfil",
+            modifier = Modifier.size(100.dp)
+        )
     }
 }

@@ -174,7 +174,13 @@ fun AuthNavigation(
                 Box(
                     modifier = Modifier.weight(1f)
                 ) {
-                    ProfileScreen()
+                    ProfileScreen(
+                        navigateToLogin = {
+                        navController.navigate(Screen.Login.route) {
+                            popUpTo(0) // Clears the backstack if needed.
+                            }
+                        }
+                    )
                 }
                 BottomNavBar(currentRoute = currentRoute ?: "", onNavigate = { route ->
                     if (route != currentRoute) navController.navigate(route)

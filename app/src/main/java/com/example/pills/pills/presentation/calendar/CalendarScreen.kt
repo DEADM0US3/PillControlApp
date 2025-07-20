@@ -115,7 +115,6 @@ fun CalendarScreen(
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(20.dp))
                 .background(White)
-                .border(2.dp, Pink, RoundedCornerShape(20.dp))
                 .padding(20.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
