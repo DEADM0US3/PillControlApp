@@ -96,7 +96,7 @@ fun ProfileScreen(
                 )
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Mascota Activa", color = Color.Black)
+            Text("Mascota Activa", color = Color.White)
         }
         Spacer(modifier = Modifier.height(32.dp))
         // Botón cerrar sesión
@@ -122,7 +122,7 @@ fun ProfileOption(text: String, onClick: () -> Unit) {
     ) {
         Text(
             text = text,
-            color = Color.Black,
+            color = Color.White,
             fontSize = 16.sp,
             modifier = Modifier.weight(1f)
         )
