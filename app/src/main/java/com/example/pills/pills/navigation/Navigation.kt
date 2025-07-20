@@ -20,7 +20,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import com.example.pills.pills.presentation.friends.FrienScreen
 import com.example.pills.pills.presentation.profile.ProfileScreen
+import com.example.pills.pills.presentation.profile.EditProfileScreen
+import com.example.pills.pills.presentation.profile.HelpScreen
 
 
 @Composable
@@ -139,7 +142,13 @@ fun AuthNavigation(
                             navController.navigate(Screen.Login.route) {
                                 popUpTo(0) // Clears the backstack if needed.
                             }
+                        },
+                        navigateToFriends = {
+                            navController.navigate(Screen.FriendScreen.route) {
+                                popUpTo(0) // Clears the backstack if needed.
+                            }
                         }
+
                     )
                 }
                 BottomNavBar(currentRoute = currentRoute ?: "", onNavigate = { route ->
@@ -166,6 +175,23 @@ fun AuthNavigation(
             }
         }
 
+        composable(
+            route = Screen.FriendScreen.route
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                Box(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    FrienScreen(
+                        onBackPressed = { navController.popBackStack() }
+                    )
+                }
+                BottomNavBar(currentRoute = currentRoute ?: "", onNavigate = { route ->
+                    if (route != currentRoute) navController.navigate(route)
+                })
+            }
+        }
+
         // Profile Screen
         composable(
             route = Screen.ProfileScreen.route
@@ -175,17 +201,41 @@ fun AuthNavigation(
                     modifier = Modifier.weight(1f)
                 ) {
                     ProfileScreen(
-                        navigateToLogin = {
-                        navController.navigate(Screen.Login.route) {
-                            popUpTo(0) // Clears the backstack if needed.
-                            }
-                        }
-                    )
+                        onEditProfile = { navController.navigate(Screen.EditProfileScreen.route) },
+                        onHelp = { navController.navigate(Screen.HelpScreen.route) },
+                        navigateToLogin = { navController.navigate(Screen.Login.route) },
+                        )
                 }
                 BottomNavBar(currentRoute = currentRoute ?: "", onNavigate = { route ->
                     if (route != currentRoute) navController.navigate(route)
                 })
             }
+        }
+
+        // Edit Profile Screen
+        composable(
+            route = Screen.EditProfileScreen.route
+        ) {
+            EditProfileScreen(
+                userName = "Laura Torres", // TODO: Obtener del HomeViewModel
+                userEmail = "laura@example.com",
+                userPhone = "+52 123 456 7890",
+                userAge = "28",
+                onBackPressed = { navController.popBackStack() },
+                onSaveProfile = { name, email, phone, age ->
+                    // TODO: Implementar guardado en base de datos
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        // Help Screen
+        composable(
+            route = Screen.HelpScreen.route
+        ) {
+            HelpScreen(
+                onBackPressed = { navController.popBackStack() }
+            )
         }
     }
 }

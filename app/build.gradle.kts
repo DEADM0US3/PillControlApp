@@ -90,6 +90,7 @@ dependencies {
     implementation(libs.koin.androidx.compose)
 
     implementation("com.kizitonwose.calendar:compose:2.4.0")
+    implementation("io.coil-kt:coil-compose:2.5.0")
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

@@ -7,11 +7,14 @@ import androidx.compose.ui.Modifier
 
 @Composable
 fun HomeScreen(
-    navigateToLogin: () -> Unit
+    navigateToLogin: () -> Unit,
+    navigateToFriends : () -> Unit
 ) {
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        HomeScreenUI()
+        HomeScreenUI(
+            navigateToFriends
+        )
     }
 } 

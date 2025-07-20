@@ -5,6 +5,7 @@ import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -60,6 +61,7 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun HomeScreenUI(
+    navigateToFriends : () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -87,7 +89,9 @@ fun HomeScreenUI(
             PillTakingSection()
             CycleStatusSection()
             RecentTakesGraph()
-            FriendsListSection()
+            FriendsListSection(
+                navigateToFriends
+            )
             Spacer(Modifier.height(80.dp)) // Para no tapar el bottom nav
         }
     }
@@ -318,7 +322,9 @@ fun RecentTakesGraph() {
 }
 
 @Composable
-fun FriendsListSection() {
+fun FriendsListSection(
+    navigateToFriends : () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -334,7 +340,13 @@ fun FriendsListSection() {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Amigas", fontWeight = FontWeight.Bold, color = Black)
-                Text("Ver más...", color = Pink)
+                Text(
+                    text = "Ver más...",
+                    color = Pink,
+                    modifier = Modifier.clickable {
+                        navigateToFriends()
+                    }
+                )
             }
             Spacer(Modifier.height(8.dp))
             FriendItem("Valeria García")

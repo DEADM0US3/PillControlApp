@@ -82,7 +82,10 @@ fun SignUpScreen(
                 cursorColor = Color(0xFFDF7A92),
                 focusedIndicatorColor = Color(0xFFDF7A92),
                 unfocusedIndicatorColor = Color(0xFFDF7A92),
-                focusedLabelColor = Color(0xFFDF7A92)
+                focusedLabelColor = Color(0xFFDF7A92),
+                unfocusedLabelColor = Color.White,
+                focusedTextColor = Color.White,      // Color del texto cuando el campo está enfocado
+                unfocusedTextColor = Color.White     // Color del texto cuando el campo no está enfocado
             )
         )
         if (state.nameError != null) {
@@ -110,7 +113,10 @@ fun SignUpScreen(
                 cursorColor = Color(0xFFDF7A92),
                 focusedIndicatorColor = Color(0xFFDF7A92),
                 unfocusedIndicatorColor = Color(0xFFDF7A92),
-                focusedLabelColor = Color(0xFFDF7A92)
+                focusedLabelColor = Color(0xFFDF7A92),
+                unfocusedLabelColor = Color.White,
+                focusedTextColor = Color.White,      // Color del texto cuando el campo está enfocado
+                unfocusedTextColor = Color.White     // Color del texto cuando el campo no está enfocado
             )
         )
         if (state.emailError != null) {
@@ -145,7 +151,10 @@ fun SignUpScreen(
                 cursorColor = Color(0xFFDF7A92),
                 focusedIndicatorColor = Color(0xFFDF7A92),
                 unfocusedIndicatorColor = Color(0xFFDF7A92),
-                focusedLabelColor = Color(0xFFDF7A92)
+                focusedLabelColor = Color(0xFFDF7A92),
+                unfocusedLabelColor = Color.White,
+                focusedTextColor = Color.White,      // Color del texto cuando el campo está enfocado
+                unfocusedTextColor = Color.White     // Color del texto cuando el campo no está enfocado
             )
         )
         if (state.passwordError != null) {

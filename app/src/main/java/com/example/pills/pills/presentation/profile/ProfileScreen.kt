@@ -25,11 +25,10 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun ProfileScreen(
     userName: String = "Laura Torres",
-    navigateToLogin: () -> Unit,
     onEditProfile: () -> Unit = {},
     onHelp: () -> Unit = {},
     onSettings: () -> Unit = {},
-    onLogout: () -> Unit = {},
+    navigateToLogin: () -> Unit = {},
     isPetActive: Boolean = true,
     onPetActiveChange: (Boolean) -> Unit = {},
     homeViewModel: HomeViewModel = koinViewModel()
