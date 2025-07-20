@@ -4,11 +4,19 @@ import com.example.pills.pills.domain.repository.LoginRepository
 import com.example.pills.pills.domain.repository.ResetPasswordRepository
 import com.example.pills.pills.domain.repository.SetPasswordRepository
 import com.example.pills.pills.domain.repository.SignUpRepository
+import com.example.pills.pills.domain.repository.ProfileRepository
 import com.example.pills.pills.domain.supabase.SupabaseClientProvider
 import com.example.pills.pills.domain.use_case.ValidateEmail
 import com.example.pills.pills.domain.use_case.ValidateName
 import com.example.pills.pills.domain.use_case.ValidatePassword
 import com.example.pills.pills.domain.use_case.ValidateTerms
+import com.example.pills.pills.domain.use_case.GetUserProfile
+import com.example.pills.pills.domain.use_case.UpdateUserProfile
+import com.example.pills.pills.domain.use_case.UpdateProfileImage
+import com.example.pills.pills.domain.use_case.UploadProfileImage
+import com.example.pills.pills.domain.use_case.DeleteProfileImage
+import com.example.pills.pills.domain.use_case.ValidatePhone
+import com.example.pills.pills.domain.use_case.ValidateAge
 import com.example.pills.pills.presentation.forgetPassword.reset.ResetPasswordViewModel
 import com.example.pills.pills.presentation.forgetPassword.setNew.SetPasswordViewModel
 import com.example.pills.pills.presentation.login.LoginViewModel
@@ -38,6 +46,8 @@ val appModule = module {
 
     single { SetPasswordRepository(get()) }
 
+    single { ProfileRepository(get(), androidContext()) }
+
     // Provide LoginRepository (Now with SupabaseClientProvider)
     single { LoginRepository(androidContext(), get() ) }
 
@@ -47,6 +57,13 @@ val appModule = module {
     factoryOf(::ValidatePassword)
     factoryOf(::ValidateTerms)
     factoryOf(::ValidateName)
+    factoryOf(::GetUserProfile)
+    factoryOf(::UpdateUserProfile)
+    factoryOf(::UpdateProfileImage)
+    factoryOf(::UploadProfileImage)
+    factoryOf(::DeleteProfileImage)
+    factoryOf(::ValidatePhone)
+    factoryOf(::ValidateAge)
 }
 
 

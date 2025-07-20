@@ -38,16 +38,16 @@ class SignUpRepository(
         return  withContext(Dispatchers.IO) {
             try {
                 supabaseClient.auth.verifyEmailOtp(
-                    type = OtpType.Email.EMAIL,
+                    type = OtpType.Email.SIGNUP,
                     email = email,
                     token = token
                 )
                 return@withContext Result.success(Unit)
             } catch (e: Exception) {
+                Logger.e("SignUpRepository", "Error verifying email: ${e.message}")
                 return@withContext Result.failure(e)
             }
         }
-
     }
 
     // Function to check if the user's email exists in the public.users table
