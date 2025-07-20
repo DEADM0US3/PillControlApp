@@ -80,7 +80,7 @@ fun ProfileScreen(
         ProfileOption(text = "Ayuda", onClick = onHelp)
         ProfileOption(text = "Configuración", onClick = onSettings)
         Spacer(modifier = Modifier.height(24.dp))
-        // Switch Mascota Activa
+        // Switch Mascota Activa (versión optimizada)
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -91,8 +91,10 @@ fun ProfileScreen(
                     onPetActiveChange(it)
                 },
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color(0xFFF48FB1),
-                    checkedTrackColor = Color(0xFFF8BBD0)
+                    checkedThumbColor = Color(0xFFEC407A),  // Rosa más intenso y elegante
+                    checkedTrackColor = Color(0xFFFCE4EC),  // Rosa pastel muy claro
+                    uncheckedThumbColor = Color(0xFFE0E0E0), // Gris claro (valor por defecto)
+                    uncheckedTrackColor = Color(0xFFBDBDBD)  // Gris medio (valor por defecto)
                 )
             )
             Spacer(modifier = Modifier.width(8.dp))
