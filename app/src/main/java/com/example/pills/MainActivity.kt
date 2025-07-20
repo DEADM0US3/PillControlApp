@@ -1,9 +1,13 @@
 package com.example.pills
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresPermission
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -22,20 +26,46 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import com.example.pills.notifications.MyPeriodicWorker
 import com.example.pills.pills.navigation.AuthNavigation
 import com.example.pills.pills.presentation.main.MainViewModel
 import com.example.pills.ui.theme.AuthTheme
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import java.util.concurrent.TimeUnit
+
 
 class MainActivity : ComponentActivity() {
-    // Inject the MainViewModel via Koin.
     private val mainViewModel: MainViewModel by viewModel()
 
+
+    @RequiresPermission(
+        allOf = [
+            android.Manifest.permission.BLUETOOTH_SCAN,
+            android.Manifest.permission.BLUETOOTH_CONNECT
+        ]
+    )
     override fun onCreate(savedInstanceState: Bundle?) {
+        setupPeriodicWork()
         super.onCreate(savedInstanceState)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                    1001
+                )
+            }
+        }
+
         setContent {
             AuthTheme(darkTheme = false, dynamicColor = false) {
-                // Collect the UI state exposed by the ViewModel.
                 val uiState by mainViewModel.uiState.collectAsState()
 
                 ToastDebug(mainViewModel = mainViewModel)
@@ -48,7 +78,22 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    private fun setupPeriodicWork() {
+        val workRequest = PeriodicWorkRequestBuilder<MyPeriodicWorker>(15, TimeUnit.MINUTES)
+            .build()
+
+        WorkManager.getInstance(this)
+            .enqueueUniquePeriodicWork(
+                "MyPeriodicWork",
+                ExistingPeriodicWorkPolicy.KEEP,
+                workRequest
+            )
+    }
+
+
 }
+
 
 
 

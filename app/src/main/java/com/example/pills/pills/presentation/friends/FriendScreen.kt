@@ -45,8 +45,8 @@ import com.example.pills.ui.theme.Pink
 
 @Composable
 fun FrienScreen(
-    onBackPressed: () ->Unit ,
-    ) {
+    onBackPressed: () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()

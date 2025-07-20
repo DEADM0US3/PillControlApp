@@ -1,5 +1,6 @@
 package com.example.pills.pills.navigation
 
+import androidx.annotation.RequiresPermission
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -20,12 +21,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import com.example.pills.pills.presentation.configuration.ConfigurationScreen
 import com.example.pills.pills.presentation.friends.FrienScreen
 import com.example.pills.pills.presentation.profile.ProfileScreen
 import com.example.pills.pills.presentation.profile.EditProfileScreen
 import com.example.pills.pills.presentation.profile.HelpScreen
 
 
+@RequiresPermission(
+    allOf = [
+        android.Manifest.permission.BLUETOOTH_SCAN,
+        android.Manifest.permission.BLUETOOTH_CONNECT
+    ]
+)
 @Composable
 fun AuthNavigation(
     startDestination: String
@@ -183,7 +191,7 @@ fun AuthNavigation(
                     modifier = Modifier.weight(1f)
                 ) {
                     FrienScreen(
-                        onBackPressed = { navController.popBackStack() }
+                        onBackPressed = { navController.navigate(Screen.HomeScreen.route)}
                     )
                 }
                 BottomNavBar(currentRoute = currentRoute ?: "", onNavigate = { route ->
@@ -202,6 +210,7 @@ fun AuthNavigation(
                 ) {
                     ProfileScreen(
                         onEditProfile = { navController.navigate(Screen.EditProfileScreen.route) },
+                        onSettings = { navController.navigate(Screen.ConfigurationScreen.route) },
                         onHelp = { navController.navigate(Screen.HelpScreen.route) },
                         navigateToLogin = { navController.navigate(Screen.Login.route) },
                         )
@@ -211,6 +220,22 @@ fun AuthNavigation(
                 })
             }
         }
+
+        // Configuration Screen
+        composable(
+            route = Screen.ConfigurationScreen.route
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                Box(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    ConfigurationScreen(
+                        onBackPressed = { navController.popBackStack() }
+                    )
+                }
+            }
+        }
+
 
         // Edit Profile Screen
         composable(
