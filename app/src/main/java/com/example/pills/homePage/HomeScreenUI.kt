@@ -53,7 +53,11 @@ import com.example.pills.ui.theme.GrayText
 import com.example.pills.ui.theme.LightGray
 import com.example.pills.ui.theme.PinkLight
 import org.koin.androidx.compose.koinViewModel
-
+import androidx.compose.material.icons.filled.Pets  // <-- Añade este import
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.ContentScale
+import com.example.pills.R
 
 @Composable
 fun HomeScreenUI(
@@ -145,10 +149,7 @@ fun ProtectionStatusSection() {
             Text("Píldora actual: 20 / 28", color = Black)
         }
     }
-}
-
-
-@Composable
+}@Composable
 fun MascotReminderSection() {
     Box(
         modifier = Modifier
@@ -157,8 +158,13 @@ fun MascotReminderSection() {
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("No olvides estar tomando agua", color = Pink, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(12.dp))
+            Text(
+                text = "¡No olvides estar tomando agua!",
+                color = Pink,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+
             Box(
                 modifier = Modifier
                     .size(190.dp)
@@ -166,12 +172,16 @@ fun MascotReminderSection() {
                     .background(LightGray),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.Face, contentDescription = null, modifier = Modifier.size(100.dp))
+                Image(
+                    painter = painterResource(id = R.drawable.happy_rose), // Nombre exacto de tu archivo PNG
+                    contentDescription = "Mascota feliz",
+                    contentScale = ContentScale.Fit, // Escala adecuada
+                    modifier = Modifier.size(150.dp)
+                )
             }
         }
     }
 }
-
 @Composable
 fun PillTakingSection() {
     Box(
