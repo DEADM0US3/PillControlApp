@@ -107,7 +107,7 @@ fun HeaderSection(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(0.dp, 16.dp) ,          // para que el Row ocupe todo el ancho
+            .padding(0.dp, 16.dp),          // para que el Row ocupe todo el ancho
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Start  // el contenido al inicio (izquierda)
     ) {
@@ -115,9 +115,12 @@ fun HeaderSection(
         Spacer(Modifier.width(8.dp))
         Button(
             onClick = {},
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF36F9D))
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.White,  // Fondo blanco
+                contentColor = Color.Gray      // Texto gris
+            )
         ) {
-            Text(text = "Hola, $cleanUserName", color = Color.White)
+            Text(text = "Hola, $cleanUserName")
         }
     }
 }
