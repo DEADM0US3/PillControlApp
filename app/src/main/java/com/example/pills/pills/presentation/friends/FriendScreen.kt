@@ -22,14 +22,22 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -122,6 +130,18 @@ fun FriendsScreenHeader(onBackPressed: () -> Unit) {
 
 @Composable
 fun FriendsListSection() {
+    var showDialog by remember { mutableStateOf(false) }
+    val friends = remember { mutableStateListOf("Valeria García", "Yesenia Torres", "Luna Aguilar") }
+
+    if (showDialog) {
+        AddFriendDialog(
+            onDismiss = { showDialog = false },
+            onAddFriend = { newFriend ->
+                friends.add(newFriend)
+            }
+        )
+    }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -142,18 +162,19 @@ fun FriendsListSection() {
                     contentDescription = "Agregar",
                     tint = Color.Black,
                     modifier = Modifier.clickable {
-                        // Acción al hacer clic
-                        println("Se presionó el botón de agregar")
+                        showDialog = true
                     }
                 )
             }
             Spacer(Modifier.height(8.dp))
-            FriendItem("Valeria García")
-            FriendItem("Yesenia Torres")
-            FriendItem("Luna Aguilar")
+
+            friends.forEach {
+                FriendItem(name = it)
+            }
         }
     }
 }
+
 
 @Composable
 fun FriendItem(name: String) {
@@ -175,4 +196,44 @@ fun FriendItem(name: String) {
             Text("Recordar", color = Color.White, fontSize = 12.sp)
         }
     }
+}
+
+@Composable
+fun AddFriendDialog(
+    onDismiss: () -> Unit,
+    onAddFriend: (String) -> Unit
+) {
+    var friendName by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    if (friendName.isNotBlank()) {
+                        onAddFriend(friendName.trim())
+                        onDismiss()
+                    }
+                }
+            ) {
+                Text("Agregar")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        },
+        title = {
+            Text("Agregar nueva amiga")
+        },
+        text = {
+            OutlinedTextField(
+                value = friendName,
+                onValueChange = { friendName = it },
+                label = { Text("Nombre de la amiga") },
+                singleLine = true
+            )
+        }
+    )
 }
