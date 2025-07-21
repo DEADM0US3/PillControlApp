@@ -56,8 +56,9 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.pills.R
-import androidx.lifecycle.viewmodel.compose.viewModel
+import org.koin.androidx.compose.koinViewModel
 import kotlinx.coroutines.delay
+import kotlin.toString
 
 // Paleta de colores premium basada en el degradado
 object ProfileColors {
@@ -78,170 +79,42 @@ object ProfileColors {
 }
 
 @Composable
-fun EditProfileScreen(
-    userName: String = "Laura Torres",
-    userEmail: String = "laura@example.com",
-    userPhone: String = "+52 123 456 7890",
-    userAge: String = "28",
-    onBackPressed: () -> Unit = {},
-    onSaveProfile: (String, String, String, String) -> Unit = { _, _, _, _ -> }
-) {
-    val viewModel: EditProfileViewModel = viewModel()
-    val state by viewModel.state.collectAsState()
-    
-    var showSaveDialog by remember { mutableStateOf(false) }
-    var showSuccessAnimation by remember { mutableStateOf(false) }
-    
-    // Estados para animaciones
-    var profileImageScale by remember { mutableStateOf(1f) }
-    val profileImageAnimation = animateFloatAsState(
-        targetValue = profileImageScale,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        )
-    )
-    
-    // Cargar datos del usuario al iniciar
-    LaunchedEffect(Unit) {
-        viewModel.loadUserProfile(userName, userEmail, userPhone, userAge)
-    }
-    
-    // Manejar éxito del guardado con animación
-    LaunchedEffect(state.isSuccess) {
-        if (state.isSuccess) {
-            showSuccessAnimation = true
-            delay(2000)
-            try {
-                onSaveProfile(state.name, state.email, state.phone, state.age)
-            } catch (e: Exception) {
-                // Manejar error de callback de forma segura
-            }
-        }
-    }
-    
-    val context = LocalContext.current
-    
-    val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri ->
-        try {
-            uri?.let { 
-                viewModel.onEvent(EditProfileEvent.UpdateProfileImage(it.toString()))
-                profileImageScale = 1.1f
-                // Volver a escala normal después de la animación
-                profileImageScale = 1f
-            }
-        } catch (e: Exception) {
-            viewModel.onEvent(EditProfileEvent.UpdateProfileImage(""))
-        }
-    }
-
-    Box(modifier = Modifier.fillMaxSize()) {
-        // Fondo principal con degradado
-        Column(
+fun ModernHeader(onBackPressed: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        IconButton(
+            onClick = onBackPressed,
             modifier = Modifier
-                .fillMaxSize()
+                .size(48.dp)
                 .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0xFFF48FB1),
-                            Color(0xFFFCE4EC)
-                        )
-                    )
+                    color = ProfileColors.glassMorphism,
+                    shape = CircleShape
                 )
         ) {
-            // Header estático en la parte superior
-            ModernHeader(onBackPressed = onBackPressed)
-            
-            // Contenido scrolleable debajo del header
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp),
-                contentPadding = PaddingValues(bottom = 100.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                item {
-                    Column {
-                        Spacer(modifier = Modifier.height(24.dp))
-                        
-                        // Sección de avatar con animaciones
-                        AnimatedProfileSection(
-                            state = state,
-                            profileImageAnimation = profileImageAnimation.value,
-                            onImageClick = { 
-                                imagePickerLauncher.launch("image/*") 
-                            }
-                        )
-                        
-                        Spacer(modifier = Modifier.height(32.dp))
-                    }
-                }
-                
-                // Mostrar mensaje de error con animación
-                item {
-                    AnimatedVisibility(
-                        visible = state.errorMessage != null,
-                        enter = slideInVertically() + fadeIn(),
-                        exit = slideOutVertically() + fadeOut()
-                    ) {
-                        ErrorCard(errorMessage = state.errorMessage ?: "")
-                    }
-                }
-                
-                // Formulario con campos modernos
-                item {
-                    Column {
-                        ModernFormSection(
-                            state = state,
-                            viewModel = viewModel
-                        )
-                        
-                        Spacer(modifier = Modifier.height(32.dp))
-                    }
-                }
-                
-                // Botón de guardar con animaciones
-                item {
-                    Column {
-                        ModernSaveButton(
-                            isLoading = state.isLoading,
-                            onSave = { 
-                                showSaveDialog = true 
-                            }
-                        )
-                        
-                        Spacer(modifier = Modifier.height(40.dp))
-                    }
-                }
-            }
+            Icon(
+                imageVector = Icons.Default.ArrowBack,
+                contentDescription = "Volver",
+                tint = ProfileColors.onSurface
+            )
         }
         
-        // Overlay de éxito con animación completa
-        AnimatedVisibility(
-            visible = showSuccessAnimation,
-            enter = fadeIn() + scaleIn(),
-            exit = fadeOut() + scaleOut(),
-            modifier = Modifier.fillMaxSize()
-        ) {
-            SuccessOverlay()
-        }
-    }
-
-    // Diálogo moderno de confirmación
-    if (showSaveDialog) {
-        ModernConfirmationDialog(
-            onConfirm = {
-                viewModel.onEvent(EditProfileEvent.SaveProfile)
-                showSaveDialog = false
-            },
-            onDismiss = { showSaveDialog = false }
+        Spacer(modifier = Modifier.weight(1f))
+        
+        Text(
+            text = "Editar Perfil",
+            style = MaterialTheme.typography.headlineSmall.copy(
+                fontWeight = FontWeight.Bold,
+                color = ProfileColors.onSurface
+            )
         )
+        
+        Spacer(modifier = Modifier.weight(1f))
     }
 }
-
-
 
 @Composable
 fun AnimatedProfileSection(
@@ -250,139 +123,68 @@ fun AnimatedProfileSection(
     onImageClick: () -> Unit
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp),
+        modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Container del avatar con múltiples capas
         Box(
-            modifier = Modifier.size(160.dp),
-            contentAlignment = Alignment.Center
+            modifier = Modifier
+                .size(120.dp)
+                .scale(profileImageAnimation)
+                .clip(CircleShape)
+                .shadow(8.dp, CircleShape)
+                .clickable { onImageClick() }
+                .background(ProfileColors.surfaceVariant)
         ) {
-            // Círculo de fondo animado
-            var rotationAngle by remember { mutableStateOf(0f) }
-            LaunchedEffect(Unit) {
-                while (true) {
-                    rotationAngle += 1f
-                    delay(100)
-                }
-            }
-            
-            // Anillo externo giratorio
-            Box(
-                modifier = Modifier
-                    .size(160.dp)
-                    .rotate(rotationAngle)
-                    .background(
-                        Brush.sweepGradient(
-                            colors = listOf(
-                                ProfileColors.primary.copy(alpha = 0.3f),
-                                ProfileColors.accent.copy(alpha = 0.6f),
-                                ProfileColors.primary.copy(alpha = 0.3f)
-                            )
-                        ),
-                        CircleShape
-                    )
-            )
-            
-            // Avatar principal
-            Box(
-                modifier = Modifier
-                    .size(140.dp)
-                    .scale(profileImageAnimation)
-                    .clip(CircleShape)
-                    .background(
-                        Brush.radialGradient(
-                            colors = listOf(
-                                ProfileColors.primaryLight,
-                                ProfileColors.surface
-                            )
-                        )
-                    )
-                    .border(4.dp, ProfileColors.surface, CircleShape)
-                    .clickable { onImageClick() }
-                    .shadow(
-                        elevation = 8.dp,
-                        shape = CircleShape
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                if (!state.profileImageUri.isNullOrBlank()) {
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(state.profileImageUri)
-                            .crossfade(true)
-                            .build(),
-                        contentDescription = "Foto de perfil",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop,
-                        error = painterResource(id = R.drawable.ic_launcher_foreground)
-                    )
-                } else {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                        contentDescription = "Foto de perfil",
-                        modifier = Modifier.size(100.dp)
-                    )
-                }
-            }
-            
-            // Botón de cámara flotante con animación
-            var cameraScale by remember { mutableStateOf(1f) }
-            val cameraAnimation by animateFloatAsState(
-                targetValue = cameraScale,
-                animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
-            )
-            
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .offset((-8).dp, (-8).dp)
-                    .size(48.dp)
-                    .scale(cameraAnimation)
-                    .clip(CircleShape)
-                    .background(
-                        Brush.linearGradient(
-                            colors = listOf(
-                                ProfileColors.accent,
-                                ProfileColors.primary
-                            )
-                        )
-                    )
-                    .border(3.dp, ProfileColors.surface, CircleShape)
-                    .clickable {
-                        cameraScale = 1.2f
-                        cameraScale = 1f
-                        onImageClick()
+            if (state.profileImageUri?.isNotEmpty() == true) {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(state.profileImageUri)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = "Foto de perfil",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                    onError = {
+                        // Manejo de error de carga de imagen
                     }
-                    .shadow(6.dp, CircleShape),
-                contentAlignment = Alignment.Center
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = "Agregar foto",
+                    modifier = Modifier
+                        .size(48.dp)
+                        .align(Alignment.Center),
+                    tint = ProfileColors.onSurfaceVariant
+                )
+            }
+            
+            // Icono de cámara en la esquina
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .align(Alignment.BottomEnd)
+                    .background(ProfileColors.primary, CircleShape)
             ) {
                 Icon(
                     imageVector = Icons.Default.CameraAlt,
                     contentDescription = "Cambiar foto",
-                    tint = Color.White,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier
+                        .size(20.dp)
+                        .align(Alignment.Center),
+                    tint = Color.White
                 )
             }
         }
         
         Spacer(modifier = Modifier.height(16.dp))
         
-        // Texto con animación de entrada
-        AnimatedVisibility(
-            visible = true,
-            enter = fadeIn() + slideInVertically()
-        ) {
-            Text(
-                text = "Toca para cambiar tu foto",
-                color = Color.White.copy(alpha = 0.9f),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                textAlign = TextAlign.Center
+        Text(
+            text = "Toca para cambiar la foto",
+            style = MaterialTheme.typography.bodyMedium.copy(
+                color = ProfileColors.onSurfaceVariant
             )
-        }
+        )
     }
 }
 
@@ -391,249 +193,63 @@ fun ErrorCard(errorMessage: String) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp)
-            .shadow(4.dp, RoundedCornerShape(16.dp)),
+            .padding(vertical = 8.dp),
         colors = CardDefaults.cardColors(
             containerColor = ProfileColors.error.copy(alpha = 0.1f)
         ),
-        shape = RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(12.dp)
     ) {
         Row(
-            modifier = Modifier.padding(20.dp),
+            modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = Icons.Default.ErrorOutline,
-                contentDescription = null,
+                contentDescription = "Error",
                 tint = ProfileColors.error,
                 modifier = Modifier.size(24.dp)
             )
+            
             Spacer(modifier = Modifier.width(12.dp))
+            
             Text(
                 text = errorMessage,
-                color = ProfileColors.error,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium
-            )
-        }
-    }
-    Spacer(modifier = Modifier.height(16.dp))
-}
-
-@Composable
-fun ModernFormSection(
-    state: EditProfileState,
-    viewModel: EditProfileViewModel
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp)
-    ) {
-        // Campos con animaciones de entrada
-        val fields = listOf(
-            FieldData("Nombre completo", state.name, Icons.Default.Person) { value: String ->
-                viewModel.onEvent(EditProfileEvent.UpdateName(value))
-            },
-            FieldData("Correo electrónico", state.email, Icons.Default.Email) { value: String ->
-                viewModel.onEvent(EditProfileEvent.UpdateEmail(value))
-            },
-            FieldData("Teléfono", state.phone, Icons.Default.Phone) { value: String ->
-                viewModel.onEvent(EditProfileEvent.UpdatePhone(value))
-            },
-            FieldData("Edad", state.age, Icons.Default.Cake) { value: String ->
-                viewModel.onEvent(EditProfileEvent.UpdateAge(value))
-            }
-        )
-        
-        fields.forEachIndexed { index, fieldData ->
-            AnimatedVisibility(
-                visible = true,
-                enter = fadeIn(
-                    animationSpec = tween(
-                        durationMillis = 300,
-                        delayMillis = index * 100
-                    )
-                ) + slideInVertically(
-                    animationSpec = tween(
-                        durationMillis = 300,
-                        delayMillis = index * 100
-                    )
-                ) { it }
-            ) {
-                ModernTextField(
-                    label = fieldData.label,
-                    value = fieldData.value,
-                    onValueChange = fieldData.onValueChange,
-                    icon = fieldData.icon,
-                    keyboardType = when (fieldData.label) {
-                        "Correo electrónico" -> KeyboardType.Email
-                        "Teléfono" -> KeyboardType.Phone
-                        "Edad" -> KeyboardType.Number
-                        else -> KeyboardType.Text
-                    }
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    color = ProfileColors.error
                 )
-            }
-            
-            if (index < fields.size - 1) {
-                Spacer(modifier = Modifier.height(20.dp))
-            }
+            )
         }
     }
 }
 
 @Composable
-fun ModernTextField(
-    label: String,
-    value: String,
-    onValueChange: (String) -> Unit,
-    icon: ImageVector,
-    keyboardType: KeyboardType = KeyboardType.Text
-) {
-    var isFocused by remember { mutableStateOf(false) }
-    
-    Card(
+fun SuccessOverlay() {
+    Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .shadow(
-                elevation = if (isFocused) 8.dp else 4.dp,
-                shape = RoundedCornerShape(20.dp)
-            ),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = ProfileColors.surface
-        )
+            .fillMaxSize()
+            .background(ProfileColors.success.copy(alpha = 0.9f)),
+        contentAlignment = Alignment.Center
     ) {
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            label = { 
-                Text(
-                    text = label,
-                    fontWeight = FontWeight.Medium
-                ) 
-            },
-            leadingIcon = {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .background(
-                            if (isFocused) ProfileColors.primaryLight else ProfileColors.surfaceVariant,
-                            CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = if (isFocused) ProfileColors.primary else ProfileColors.outline,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            },
-            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color.Transparent,
-                unfocusedBorderColor = Color.Transparent,
-                focusedLabelColor = ProfileColors.primary,
-                unfocusedLabelColor = ProfileColors.onSurfaceVariant,
-                cursorColor = ProfileColors.primary,
-                focusedTextColor = ProfileColors.onSurface,
-                unfocusedTextColor = ProfileColors.onSurface
-            ),
-            shape = RoundedCornerShape(20.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(4.dp),
-            singleLine = true
-        )
-    }
-}
-
-@Composable
-fun ModernSaveButton(
-    isLoading: Boolean,
-    onSave: () -> Unit
-) {
-    var isPressed by remember { mutableStateOf(false) }
-    val buttonScale by animateFloatAsState(
-        targetValue = if (isPressed) 0.95f else 1f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
-    )
-    
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp)
-            .scale(buttonScale)
-            .shadow(
-                elevation = 12.dp,
-                shape = RoundedCornerShape(28.dp),
-                spotColor = ProfileColors.primary.copy(alpha = 0.4f)
-            )
-            .clickable {
-                isPressed = true
-                onSave()
-                isPressed = false
-            },
-        shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.Transparent
-        )
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(64.dp)
-                .background(
-                    Brush.horizontalGradient(
-                        colors = listOf(
-                            ProfileColors.accent,
-                            ProfileColors.primary,
-                            ProfileColors.accent
-                        )
-                    )
-                ),
-            contentAlignment = Alignment.Center
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            if (isLoading) {
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    CircularProgressIndicator(
-                        color = Color.White,
-                        modifier = Modifier.size(24.dp),
-                        strokeWidth = 3.dp
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = "Guardando...",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
-                    )
-                }
-            } else {
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Save,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = "Guardar Cambios",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
-                    )
-                }
-            }
+            Icon(
+                imageVector = Icons.Default.CheckCircle,
+                contentDescription = "Éxito",
+                tint = Color.White,
+                modifier = Modifier.size(64.dp)
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Text(
+                text = "¡Perfil actualizado exitosamente!",
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                ),
+                textAlign = TextAlign.Center
+            )
         }
     }
 }
@@ -645,194 +261,382 @@ fun ModernConfirmationDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = ProfileColors.surface,
-        shape = RoundedCornerShape(28.dp),
         title = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(
-                            ProfileColors.primaryLight,
-                            CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Save,
-                        contentDescription = null,
-                        tint = ProfileColors.primary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(16.dp))
-                Text(
-                    text = "Guardar Cambios",
-                    fontWeight = FontWeight.Bold,
-                    color = ProfileColors.onSurface,
-                    fontSize = 20.sp
+            Text(
+                text = "Confirmar cambios",
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    fontWeight = FontWeight.Bold
                 )
-            }
+            )
         },
         text = {
             Text(
                 text = "¿Estás seguro de que quieres guardar los cambios en tu perfil?",
-                color = ProfileColors.onSurfaceVariant,
-                fontSize = 16.sp,
-                lineHeight = 24.sp
+                style = MaterialTheme.typography.bodyMedium
             )
         },
         confirmButton = {
-            Button(
+            TextButton(
                 onClick = onConfirm,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = ProfileColors.primary
-                ),
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.height(48.dp)
-            ) {
-                Text(
-                    text = "Guardar",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = ProfileColors.primary
                 )
+            ) {
+                Text("Guardar")
             }
         },
         dismissButton = {
             TextButton(
                 onClick = onDismiss,
-                modifier = Modifier.height(48.dp)
-            ) {
-                Text(
-                    text = "Cancelar",
-                    color = ProfileColors.primary,
-                    fontWeight = FontWeight.Medium
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = ProfileColors.onSurfaceVariant
                 )
+            ) {
+                Text("Cancelar")
             }
-        }
+        },
+        containerColor = ProfileColors.surface,
+        shape = RoundedCornerShape(16.dp)
     )
 }
 
 @Composable
-fun SuccessOverlay() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(ProfileColors.primary.copy(alpha = 0.95f)),
-        contentAlignment = Alignment.Center
+fun FieldData(
+    label: String,
+    value: String,
+    icon: ImageVector,
+    onValueChange: (String) -> Unit,
+    errorMessage: String? = null,
+    keyboardType: KeyboardType = KeyboardType.Text
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Card(
-            shape = RoundedCornerShape(32.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Color.White
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium.copy(
+                color = ProfileColors.onSurfaceVariant,
+                fontWeight = FontWeight.Medium
             ),
-            modifier = Modifier
-                .size(200.dp)
-                .shadow(16.dp, RoundedCornerShape(32.dp))
-        ) {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                // Ícono de éxito animado
-                var iconScale by remember { mutableStateOf(0f) }
-                LaunchedEffect(Unit) {
-                    iconScale = 1.2f
-                    delay(200)
-                    iconScale = 1f
-                }
-                
-                val iconAnimation by animateFloatAsState(
-                    targetValue = iconScale,
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness = Spring.StiffnessLow
-                    )
-                )
-                
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            leadingIcon = {
                 Icon(
-                    imageVector = Icons.Default.CheckCircle,
+                    imageVector = icon,
                     contentDescription = null,
-                    tint = ProfileColors.success,
-                    modifier = Modifier
-                        .size(64.dp)
-                        .scale(iconAnimation)
+                    tint = ProfileColors.onSurfaceVariant
                 )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                Text(
-                    text = "¡Perfil Actualizado!",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = ProfileColors.onSurface,
-                    textAlign = TextAlign.Center
-                )
-                
-                Text(
-                    text = "Tus cambios se han guardado correctamente",
-                    fontSize = 14.sp,
-                    color = ProfileColors.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-            }
+            },
+            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = ProfileColors.primary,
+                unfocusedBorderColor = ProfileColors.outline,
+                focusedLabelColor = ProfileColors.primary,
+                unfocusedLabelColor = ProfileColors.onSurfaceVariant
+            ),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.fillMaxWidth(),
+            isError = errorMessage != null
+        )
+        
+        if (errorMessage != null) {
+            Text(
+                text = errorMessage,
+                style = MaterialTheme.typography.bodySmall.copy(
+                    color = ProfileColors.error
+                ),
+                modifier = Modifier.padding(top = 4.dp)
+            )
         }
     }
 }
 
-// Clase auxiliar para los campos del formulario
-data class FieldData(
-    val label: String,
-    val value: String,
-    val icon: ImageVector,
-    val onValueChange: (String) -> Unit
-)
+@Composable
+fun ModernTextField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    icon: ImageVector,
+    errorMessage: String? = null,
+    keyboardType: KeyboardType = KeyboardType.Text
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium.copy(
+                color = ProfileColors.onSurfaceVariant,
+                fontWeight = FontWeight.Medium
+            ),
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            leadingIcon = {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = ProfileColors.onSurfaceVariant
+                )
+            },
+            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = ProfileColors.primary,
+                unfocusedBorderColor = ProfileColors.outline,
+                focusedLabelColor = ProfileColors.primary,
+                unfocusedLabelColor = ProfileColors.onSurfaceVariant
+            ),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.fillMaxWidth(),
+            isError = errorMessage != null
+        )
+        
+        if (errorMessage != null) {
+            Text(
+                text = errorMessage,
+                style = MaterialTheme.typography.bodySmall.copy(
+                    color = ProfileColors.error
+                ),
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        }
+    }
+}
 
 @Composable
-fun ModernHeader(onBackPressed: () -> Unit) {
-    Card(
+fun ModernSaveButton(
+    onClick: () -> Unit,
+    isEnabled: Boolean = true,
+    isLoading: Boolean = false
+) {
+    Button(
+        onClick = onClick,
+        enabled = isEnabled && !isLoading,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp) // Padding más equilibrado
-            .statusBarsPadding(), // Asegura que no se superponga con la barra de estado
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White.copy(alpha = 0.15f)
-        )
+            .height(56.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = ProfileColors.primary,
+            disabledContainerColor = ProfileColors.outline.copy(alpha = 0.3f)
+        ),
+        shape = RoundedCornerShape(16.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp), // Padding interno consistente
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(
-                onClick = onBackPressed,
-                modifier = Modifier
-                    .size(48.dp)
-                    .background(
-                        Color.White.copy(alpha = 0.2f),
-                        CircleShape
-                    )
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(24.dp),
+                color = Color.White,
+                strokeWidth = 2.dp
+            )
+        } else {
+            Icon(
+                imageVector = Icons.Default.Save,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp)
+            )
+            
+            Spacer(modifier = Modifier.width(8.dp))
+            
+            Text(
+                text = "Guardar Cambios",
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontWeight = FontWeight.Bold
+                )
+            )
+        }
+    }
+}
+
+@Composable
+fun ModernFormSection(
+    state: EditProfileState,
+    viewModel: EditProfileViewModel
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+    ) {
+        ModernTextField(
+            label = "Nombre completo",
+            value = state.name,
+            onValueChange = { 
+                try {
+                    viewModel.onEvent(EditProfileEvent.UpdateName(it)) 
+                } catch (e: Exception) {
+                    // Manejo de error al actualizar nombre
+                }
+            },
+            icon = Icons.Default.Person,
+//            errorMessage = state.nameError,
+            keyboardType = KeyboardType.Text
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        ModernTextField(
+            label = "Correo electrónico",
+            value = state.email,
+            onValueChange = { 
+                try {
+                    viewModel.onEvent(EditProfileEvent.UpdateEmail(it)) 
+                } catch (e: Exception) {
+                    // Manejo de error al actualizar email
+                }
+            },
+            icon = Icons.Default.Email,
+//            errorMessage = state.emailError,
+            keyboardType = KeyboardType.Email
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        ModernTextField(
+            label = "Teléfono",
+            value = state.phone,
+            onValueChange = { 
+                try {
+                    viewModel.onEvent(EditProfileEvent.UpdatePhone(it)) 
+                } catch (e: Exception) {
+                    // Manejo de error al actualizar teléfono
+                }
+            },
+            icon = Icons.Default.Phone,
+//            errorMessage = state.phoneError,
+            keyboardType = KeyboardType.Phone
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        ModernTextField(
+            label = "Edad",
+            value = state.age,
+            onValueChange = { 
+                try {
+                    viewModel.onEvent(EditProfileEvent.UpdateAge(it)) 
+                } catch (e: Exception) {
+                    // Manejo de error al actualizar edad
+                }
+            },
+            icon = Icons.Default.Cake,
+//            errorMessage = state.ageError,
+            keyboardType = KeyboardType.Number
+        )
+    }
+}
+
+@Composable
+fun EditProfileScreen(
+    onBackPressed: () -> Unit,
+    viewModel: EditProfileViewModel = koinViewModel()
+) {
+    val state by viewModel.state.collectAsState()
+    val context = LocalContext.current
+
+    // Animación para la imagen de perfil
+    val profileImageAnimation by animateFloatAsState(
+        targetValue = if (!state.profileImageUri.isNullOrEmpty()) 1.05f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "profileImageAnimation"
+    )
+
+    // Estado diálogo confirmación guardar
+    var showConfirmationDialog by remember { mutableStateOf(false) }
+
+    // Selector de imagen
+//    val imageLauncher = rememberLauncherForActivityResult(
+//        contract = ActivityResultContracts.GetContent()
+//    ) { uri ->
+//        uri?.let {
+//            viewModel.onEvent(EditProfileEvent.UpdateProfileImage(it.toString()))
+//            // Si subes imagen a storage, lanza evento UploadImage también
+//            // viewModel.onEvent(EditProfileEvent.UploadImage(it.toString()))
+//        }
+//    }
+
+    // Cargar perfil al iniciar
+    LaunchedEffect(Unit) {
+        viewModel.onEvent(EditProfileEvent.LoadUserProfile)
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(ProfileColors.surface, ProfileColors.surfaceVariant)
+                )
+            )
+    ) {
+        if (state.isLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Regresar",
-                    tint = Color.White,
-                    modifier = Modifier.size(24.dp)
+                CircularProgressIndicator(
+                    color = ProfileColors.primary,
+                    modifier = Modifier.size(48.dp)
                 )
             }
-            Spacer(modifier = Modifier.width(16.dp))
-            Text(
-                text = "Editar Perfil",
-                color = Color.White,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold
-            )
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 100.dp)
+            ) {
+                item {
+                    ModernHeader(onBackPressed = onBackPressed)
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+//                    AnimatedProfileSection(
+//                        state = state,
+//                        profileImageAnimation = profileImageAnimation,
+//                        onImageClick = { imageLauncher.launch("image/*") }
+//                    )
+
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    state.errorMessage?.let { errorMessage ->
+                        ErrorCard(errorMessage = errorMessage)
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+
+                    ModernFormSection(state = state, viewModel = viewModel)
+
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    ModernSaveButton(
+                        onClick = { showConfirmationDialog = true },
+                        isEnabled = state.name.isNotBlank() && state.email.isNotBlank(),
+                        isLoading = state.isLoading
+                    )
+
+                    Spacer(modifier = Modifier.height(32.dp))
+                }
+            }
+
+            if (state.isSuccess) {
+                SuccessOverlay()
+            }
+
+            if (showConfirmationDialog) {
+                ModernConfirmationDialog(
+                    onConfirm = {
+                        viewModel.onEvent(EditProfileEvent.SaveProfile)
+                        showConfirmationDialog = false
+                    },
+                    onDismiss = { showConfirmationDialog = false }
+                )
+            }
         }
     }
 }

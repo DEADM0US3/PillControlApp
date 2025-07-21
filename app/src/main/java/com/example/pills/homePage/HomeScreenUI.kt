@@ -35,8 +35,10 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,17 +49,24 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pills.R
+import com.example.pills.pills.presentation.calendar.PillViewModel
+import com.example.pills.pills.presentation.components.TakePillComponent
+import com.example.pills.pills.presentation.cycle.CycleViewModel
 import com.example.pills.ui.theme.Pink
 import com.example.pills.ui.theme.Black
 import com.example.pills.ui.theme.GrayText
 import com.example.pills.ui.theme.LightGray
-import com.example.pills.ui.theme.PinkLight
+import com.patrykandpatrick.vico.compose.chart.Chart
+import com.patrykandpatrick.vico.compose.chart.line.lineChart
+import com.patrykandpatrick.vico.core.chart.Chart
+import com.patrykandpatrick.vico.core.entry.ChartEntryModelProducer
+import com.patrykandpatrick.vico.core.entry.FloatEntry
 import org.koin.androidx.compose.koinViewModel
-
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @Composable
 fun HomeScreenUI(
@@ -86,9 +95,8 @@ fun HomeScreenUI(
             HeaderSection()
             ProtectionStatusSection()
             MascotReminderSection()
-            PillTakingSection()
+            TakePillComponent()
             CycleStatusSection()
-            RecentTakesGraph()
             FriendsListSection(
                 navigateToFriends
             )
@@ -177,94 +185,27 @@ fun MascotReminderSection() {
         }
     }
 }
-
 @Composable
-fun PillTakingSection() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .background(Color.White)
-            .padding(20.dp)
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            // Icono de reloj
-            Box(
-                modifier = Modifier
-                    .size(60.dp)
-                    .clip(CircleShape)
-                    .background(PinkLight),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("🕒", fontSize = 36.sp)
-            }
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(
-                modifier = Modifier.weight(1f),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "TOMA DE HOY",
-                    color = Black,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
-                )
-                Text(
-                    text = "21 de mayo",
-                    color = GrayText,
-                    fontSize = 13.sp,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    // Hora con fondo rosa claro
-                    Box(
-                        modifier = Modifier
-                            .background(PinkLight, RoundedCornerShape(12.dp))
-                            .padding(horizontal = 12.dp, vertical = 6.dp)
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("8", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Black)
-                            Text(":", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Pink)
-                            Text("30", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Black)
-                        }
-                    }
-                    Text("Pm", color = GrayText, fontSize = 14.sp, modifier = Modifier.padding(start = 4.dp))
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Button(
-                        onClick = { /* TODO: Registrar toma */ },
-                        colors = ButtonDefaults.buttonColors(containerColor = Pink),
-                        shape = RoundedCornerShape(16.dp),
-                        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp)
-                    ) {
-                        Text("Registrar toma", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                    }
-                }
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Próxima toma en 02:00 hrs",
-                    color = GrayText,
-                    fontSize = 12.sp,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
-                )
-            }
+fun CycleStatusSection(
+    cycleViewModel: CycleViewModel = koinViewModel()
+) {
+    val cycleState by cycleViewModel.cycleState.collectAsState()
+    val cycle = cycleState?.getOrNull()
+
+    if (cycle != null) {
+        val formatter = DateTimeFormatter.ofPattern("d 'de' MMMM", Locale("es", "MX"))
+        val startDate = cycle.start_date.format(formatter)
+        val endDate = cycle.end_date.format(formatter)
+
+
+        Column {
+            StatusCard(
+                title = "Estado del ciclo: En toma",
+                content = "Inicio: $startDate\nFin: $endDate"
+            )
         }
-    }
-}
-
-@Composable
-fun CycleStatusSection() {
-    Column {
-        StatusCard(title = "Estado del ciclo: En toma", content = "Inicio: 30 de abril\nFin: 28 de mayo")
-        StatusCard(title = "Ciclo menstrual: Fase de Lútea", content = "Próximo período: 14 de junio")
+    } else {
+        Text("Cargando ciclo...", modifier = Modifier.padding(16.dp))
     }
 }
 
@@ -283,40 +224,6 @@ fun StatusCard(title: String, content: String) {
             Text(title, color = Black, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(4.dp))
             Text(content, color = GrayText)
-        }
-    }
-}
-
-
-@Composable
-fun RecentTakesGraph() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp)
-            .shadow(2.dp, RoundedCornerShape(16.dp))
-            .clip(RoundedCornerShape(16.dp))
-            .background(Color.White)
-            .padding(12.dp)
-    ) {
-        Column {
-            Text(
-                "Registro de tomas recientes",
-                color = Black,
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
-            )
-            Spacer(Modifier.height(12.dp))
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .height(120.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(LightGray),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("Gráfico (placeholder)", color = GrayText)
-            }
         }
     }
 }

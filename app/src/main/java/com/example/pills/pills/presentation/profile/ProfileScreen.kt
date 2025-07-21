@@ -17,6 +17,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.pills.R
 import com.example.pills.homePage.HomeViewModel
 import kotlinx.coroutines.launch
@@ -24,7 +27,6 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun ProfileScreen(
-    userName: String = "Laura Torres",
     onEditProfile: () -> Unit = {},
     onHelp: () -> Unit = {},
     onSettings: () -> Unit = {},
@@ -33,23 +35,74 @@ fun ProfileScreen(
     onPetActiveChange: (Boolean) -> Unit = {},
     homeViewModel: HomeViewModel = koinViewModel()
 ) {
+    val homeState by homeViewModel.uiState.collectAsState()
     var petActive by remember { mutableStateOf(isPetActive) }
     val coroutineScope = rememberCoroutineScope()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFFF48FB1), // Mismo color que CalendarScreen
-                        Color(0xFFFCE4EC)  // Mismo color que CalendarScreen
+    // Manejo de errores
+    LaunchedEffect(homeState.errorMessage) {
+        homeState.errorMessage?.let { error ->
+            // Aquí podrías mostrar un Toast o Snackbar con el error
+            // Por ahora solo lo ignoramos para evitar crasheos
+        }
+    }
+
+    if (homeState.isLoading) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFFF48FB1),
+                            Color(0xFFFCE4EC)
+                        )
+                    )
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(
+                color = Color.White,
+                modifier = Modifier.size(48.dp)
+            )
+        }
+    } else if (homeState.userName == "Guest" && homeState.userEmail.isEmpty()) {
+        // Usuario no autenticado
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFFF48FB1),
+                            Color(0xFFFCE4EC)
+                        )
+                    )
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Usuario no autenticado",
+                color = Color.White,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    } else {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFFF48FB1), // Mismo color que CalendarScreen
+                            Color(0xFFFCE4EC)  // Mismo color que CalendarScreen
+                        )
                     )
                 )
-            )
-            .padding(horizontal = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
         Spacer(modifier = Modifier.height(32.dp))
         // Imagen de perfil
         Box(
@@ -59,12 +112,27 @@ fun ProfileScreen(
                 .background(Color(0xFFB3E5FC)),
             contentAlignment = Alignment.Center
         ) {
-            // Puedes reemplazar painterResource(R.drawable.ic_profile) por tu imagen
-            Image(
-                painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                contentDescription = "Foto de perfil",
-                modifier = Modifier.size(100.dp)
-            )
+            // Mostrar imagen de perfil real si existe, sino imagen por defecto
+            if (!homeState.profileImageUrl.isNullOrBlank()) {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(homeState.profileImageUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = "Foto de perfil",
+                    modifier = Modifier.fillMaxSize(),
+                    error = painterResource(id = R.drawable.ic_launcher_foreground),
+                    onError = {
+                        // Manejo de error de carga de imagen
+                    }
+                )
+            } else {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                    contentDescription = "Foto de perfil",
+                    modifier = Modifier.size(100.dp)
+                )
+            }
         }
         Spacer(modifier = Modifier.height(16.dp))
         // Nombre
@@ -73,13 +141,40 @@ fun ProfileScreen(
             shape = RoundedCornerShape(12.dp)
         ) {
             Text(
-                text = userName,
+                text = homeState.userName,
                 color = Color.White,
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp,
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 6.dp)
             )
         }
+
+        // Información adicional del usuario
+        if (homeState.userEmail.isNotBlank() || !homeState.userPhone.isNullOrBlank() || !homeState.userAge.isNullOrBlank()) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White.copy(alpha = 0.9f)
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    if (homeState.userEmail.isNotBlank()) {
+                        UserInfoRow("Email", homeState.userEmail)
+                    }
+                    if (!homeState.userPhone.isNullOrBlank()) {
+                        UserInfoRow("Teléfono", homeState.userPhone ?: "")
+                    }
+                    if (!homeState.userAge.isNullOrBlank()) {
+                        UserInfoRow("Edad", "${homeState.userAge} años")
+                    }
+                }
+            }
+        }
+
         Spacer(modifier = Modifier.height(24.dp))
         // Opciones
         ProfileOption(text = "Editar perfil", onClick = onEditProfile)
@@ -121,6 +216,7 @@ fun ProfileScreen(
             Text("Cerrar sesión", color = Color.White, fontWeight = FontWeight.Bold)
         }
     }
+    }
 }
 
 @Composable
@@ -145,4 +241,28 @@ fun ProfileOption(text: String, onClick: () -> Unit) {
         )
     }
     Divider(color = Color.LightGray, thickness = 1.dp)
-} 
+}
+
+@Composable
+fun UserInfoRow(label: String, value: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "$label:",
+            color = Color.Gray,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.width(80.dp)
+        )
+        Text(
+            text = value,
+            color = Color.Black,
+            fontSize = 14.sp,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}

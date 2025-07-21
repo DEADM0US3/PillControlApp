@@ -26,6 +26,8 @@ import com.example.pills.pills.presentation.friends.FrienScreen
 import com.example.pills.pills.presentation.profile.ProfileScreen
 import com.example.pills.pills.presentation.profile.EditProfileScreen
 import com.example.pills.pills.presentation.profile.HelpScreen
+import com.example.pills.homePage.HomeViewModel
+import org.koin.androidx.compose.koinViewModel
 
 
 @RequiresPermission(
@@ -191,7 +193,7 @@ fun AuthNavigation(
                     modifier = Modifier.weight(1f)
                 ) {
                     FrienScreen(
-                        onBackPressed = { navController.navigate(Screen.HomeScreen.route)}
+                        onBackPressed = { navController.navigate(Screen.HomeScreen.route)},
                     )
                 }
                 BottomNavBar(currentRoute = currentRoute ?: "", onNavigate = { route ->
@@ -242,15 +244,7 @@ fun AuthNavigation(
             route = Screen.EditProfileScreen.route
         ) {
             EditProfileScreen(
-                userName = "Laura Torres", // TODO: Obtener del HomeViewModel
-                userEmail = "laura@example.com",
-                userPhone = "+52 123 456 7890",
-                userAge = "28",
-                onBackPressed = { navController.popBackStack() },
-                onSaveProfile = { name, email, phone, age ->
-                    // TODO: Implementar guardado en base de datos
-                    navController.popBackStack()
-                }
+                onBackPressed = { navController.popBackStack() }
             )
         }
 

@@ -39,6 +39,7 @@ bom = { module = "io.github.jan-tennert.supabase:bom", version.ref = "bom" }
 postgrest-kt = { module = "io.github.jan-tennert.supabase:postgrest-kt" }
 realtime-kt = { module = "io.github.jan-tennert.supabase:realtime-kt" }
 auth-kt = { module = "io.github.jan-tennert.supabase:auth-kt" }
+storage-kt = { module = "io.github.jan-tennert.supabase:storage-kt" }
 ktor-client-android = { module = "io.ktor:ktor-client-android", version.ref = "ktorClientAndroid" }
 
 #Koin

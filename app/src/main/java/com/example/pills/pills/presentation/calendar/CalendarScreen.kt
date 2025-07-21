@@ -1,5 +1,6 @@
 package com.example.pills.pills.presentation.calendar
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -26,8 +27,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.pills.pills.presentation.components.TakePillComponent
+import com.example.pills.pills.presentation.cycle.CycleViewModel
 import com.kizitonwose.calendar.compose.VerticalCalendar
 import com.kizitonwose.calendar.compose.rememberCalendarState
+import org.koin.androidx.compose.koinViewModel
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.TextStyle
@@ -47,9 +51,16 @@ private val White = Color(0xFFFFFFFF)
 private val RedPeriod = Color(0xFFE53935)
 private val YellowObs = Color(0xFFFFF176)
 
+val colorMenstruation = Color(0xFFFFC1C1)  // Rosa claro
+val colorFertile = Color(0xFFC1FFC1)       // Verde claro
+val colorOvulation = Color(0xFFFFFFC1)     // Amarillo claro
+val colorPillTaken = Color(0xFFA6FFC9)     // Verde fuerte
+
 @Composable
 fun CalendarScreen(
-    onDayClick: (LocalDate) -> Unit = {}
+    onDayClick: (LocalDate) -> Unit = {},
+    cycleViewModel: CycleViewModel = koinViewModel(),
+    pillViewModel: PillViewModel = koinViewModel()
 ) {
     val today = remember { LocalDate.now() }
     val startMonth = remember { YearMonth.now().minusMonths(12) }
@@ -65,15 +76,25 @@ fun CalendarScreen(
     var showDialog by remember { mutableStateOf(false) }
     var dialogDate by remember { mutableStateOf<LocalDate?>(null) }
 
+
+    LaunchedEffect(visibleMonth) {
+        cycleViewModel.fetchActiveCycle()
+        pillViewModel.loadPillsOfMonth(visibleMonth.year, visibleMonth.monthValue)
+        calendarState.scrollToMonth(visibleMonth)
+
+    }
+
+    val cycleState by cycleViewModel.cycleState.collectAsState()
+    val calendarEvents by cycleViewModel.calendarEvents.collectAsState()
+    val pillsOfMonth by pillViewModel.uiState.collectAsState()
+
+    Log.d("CalendarScreen", "Pills of month: $pillsOfMonth")
+
     fun openDialog(date: LocalDate) {
         dialogDate = date
         showDialog = true
     }
 
-    // Sincronizar el mes visible con el calendario
-    LaunchedEffect(visibleMonth) {
-        calendarState.scrollToMonth(visibleMonth)
-    }
 
     val scrollState = rememberScrollState()
 
@@ -110,84 +131,7 @@ fun CalendarScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         // Tarjeta de toma simplificada
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(20.dp))
-                .background(White)
-                .padding(20.dp)
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                // Icono de reloj
-                Box(
-                    modifier = Modifier
-                        .size(60.dp)
-                        .clip(CircleShape)
-                        .background(PinkLight),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("🕒", fontSize = 36.sp)
-                }
-                Spacer(modifier = Modifier.width(16.dp))
-                Column(
-                    modifier = Modifier.weight(1f),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "TOMA DE HOY",
-                        color = Black,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
-                    )
-                    Text(
-                        text = "21 de mayo",
-                        color = GrayText,
-                        fontSize = 13.sp,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        // Hora con fondo rosa claro
-                        Box(
-                            modifier = Modifier
-                                .background(PinkLight, RoundedCornerShape(12.dp))
-                                .padding(horizontal = 12.dp, vertical = 6.dp)
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("8", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Black)
-                                Text(":", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Pink)
-                                Text("30", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Black)
-                            }
-                        }
-                        Text("Pm", color = GrayText, fontSize = 14.sp, modifier = Modifier.padding(start = 4.dp))
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Button(
-                            onClick = { /* TODO: Registrar toma */ },
-                            colors = ButtonDefaults.buttonColors(containerColor = Pink),
-                            shape = RoundedCornerShape(16.dp),
-                            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp)
-                        ) {
-                            Text("Registrar toma", color = White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Próxima toma en 02:00 hrs",
-                        color = GrayText,
-                        fontSize = 12.sp,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-        }
+        TakePillComponent()
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -277,14 +221,24 @@ fun CalendarScreen(
                         val isSelected = day.date == selectedDate
                         val isToday = day.date == today
                         val isInMonth = day.position == com.kizitonwose.calendar.core.DayPosition.MonthDate
-
-                        // Determinar el color de fondo de la celda
+                        val dayEvent = calendarEvents[day.date]
+                        
+                        
                         val cellColor = when {
-                            isToday -> PinkDark
+                            pillsOfMonth.pillsOfMonth.any {
+                                LocalDate.parse(it.day_taken) == day.date &&
+                                        it.status == "taken"
+                            } -> colorPillTaken
+                            isToday -> White
                             isSelected -> Pink
+                            dayEvent?.isMenstruation == true -> colorMenstruation
+                            dayEvent?.isOvulation == true -> GrayLine
+                            dayEvent?.other == true -> colorOvulation
                             isInMonth -> PinkLight
                             else -> LightGray.copy(alpha = 0.5f)
                         }
+
+
 
                         // Determinar el color del texto
                         val textColor = when {
@@ -341,7 +295,12 @@ fun CalendarScreen(
                                         val dayOfMonth = day.date.dayOfMonth
 
                                         // Pastilla tomada (círculo pequeño rosa)
-                                        if (dayOfMonth % 7 == 1) {
+                                        if (
+                                            pillsOfMonth.pillsOfMonth.any {
+                                                LocalDate.parse(it.day_taken) == day.date &&
+                                                        it.status == "taken"
+                                            }
+                                        ) {
                                             Box(
                                                 modifier = Modifier
                                                     .size(8.dp)
@@ -349,19 +308,6 @@ fun CalendarScreen(
                                                     .background(PinkDark)
                                             )
                                             if (dayOfMonth % 5 == 0 || dayOfMonth % 3 == 0) {
-                                                Spacer(modifier = Modifier.width(2.dp))
-                                            }
-                                        }
-
-                                        // Presencia del periodo (círculo rojo)
-                                        if (dayOfMonth % 5 == 0) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(8.dp)
-                                                    .clip(CircleShape)
-                                                    .background(RedPeriod)
-                                            )
-                                            if (dayOfMonth % 3 == 0) {
                                                 Spacer(modifier = Modifier.width(2.dp))
                                             }
                                         }
@@ -423,6 +369,8 @@ fun CalendarScreen(
                         Spacer(modifier = Modifier.width(10.dp))
                         Text("Día marcado", fontSize = 12.sp, color = Black, fontWeight = FontWeight.Medium)
                     }
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier = Modifier
@@ -432,18 +380,6 @@ fun CalendarScreen(
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Text("Día de descanso", fontSize = 12.sp, color = Black, fontWeight = FontWeight.Medium)
-                    }
-                }
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(18.dp)
-                                .clip(CircleShape)
-                                .background(RedPeriod)
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text("Presencia del periodo", fontSize = 12.sp, color = Black, fontWeight = FontWeight.Medium)
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(

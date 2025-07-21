@@ -33,8 +33,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -50,38 +50,40 @@ import androidx.compose.ui.unit.sp
 import com.example.pills.homePage.CircleAvatar
 import com.example.pills.ui.theme.Black
 import com.example.pills.ui.theme.Pink
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun FrienScreen(
-    onBackPressed: () -> Unit
+    onBackPressed: () -> Unit,
+    viewModel: FriendsViewModel = koinViewModel(),
 ) {
+    
+
+    LaunchedEffect(Unit) {
+        viewModel.loadFriends()
+    }
+
+    val friends = viewModel.friends
+
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFFF48FB1), // Mismo color que ProfileScreen y CalendarScreen
-                        Color(0xFFFCE4EC)  // Mismo color que ProfileScreen y CalendarScreen
-                    )
-                )
-            ),
+        modifier = Modifier.fillMaxSize().background(
+            Brush.verticalGradient(
+                colors = listOf(Color(0xFFF48FB1), Color(0xFFFCE4EC))
+            )
+        ),
         contentAlignment = Alignment.Center
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
+            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
             FriendsScreenHeader(onBackPressed)
-            FriendsListSection()
-            Spacer(Modifier.height(80.dp)) // Para no tapar el bottom nav
+            FriendsListSection(friends, viewModel)
+            Spacer(Modifier.height(80.dp))
         }
     }
 }
+
 
 @Composable
 fun FriendsScreenHeader(onBackPressed: () -> Unit) {
@@ -129,66 +131,61 @@ fun FriendsScreenHeader(onBackPressed: () -> Unit) {
 }
 
 @Composable
-fun FriendsListSection() {
+fun FriendsListSection(
+    friends: List<String>,
+    viewModel: FriendsViewModel
+) {
     var showDialog by remember { mutableStateOf(false) }
-    val friends = remember { mutableStateListOf("Valeria García", "Yesenia Torres", "Luna Aguilar") }
 
     if (showDialog) {
         AddFriendDialog(
             onDismiss = { showDialog = false },
-            onAddFriend = { newFriend ->
-                friends.add(newFriend)
+            onAddFriend = { newFriendId ->
+                viewModel.addFriend(newFriendId) {
+                    showDialog = false
+                }
             }
         )
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp)
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
             .shadow(2.dp, RoundedCornerShape(16.dp))
             .clip(RoundedCornerShape(16.dp))
-            .background(Color.White)
-            .padding(12.dp)
+            .background(Color.White).padding(12.dp)
     ) {
         Column {
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
                 Text("Amigas", fontWeight = FontWeight.Bold, color = Black)
                 Icon(
                     imageVector = Icons.Filled.Add,
                     contentDescription = "Agregar",
                     tint = Color.Black,
-                    modifier = Modifier.clickable {
-                        showDialog = true
-                    }
+                    modifier = Modifier.clickable { showDialog = true }
                 )
             }
+
             Spacer(Modifier.height(8.dp))
 
             friends.forEach {
-                FriendItem(name = it)
+                FriendItem(name = it, onRemind = {
+                    viewModel.sendReminder(receiverId = it)
+                })
             }
         }
     }
 }
-
-
 @Composable
-fun FriendItem(name: String) {
+fun FriendItem(name: String, onRemind: () -> Unit) {
     Row(
-        Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
+        Modifier.fillMaxWidth().padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         CircleAvatar()
         Spacer(Modifier.width(8.dp))
         Text(name, modifier = Modifier.weight(1f), color = Black)
         Button(
-            onClick = { /* Recordar */ },
+            onClick = onRemind,
             colors = ButtonDefaults.buttonColors(containerColor = Pink),
             shape = RoundedCornerShape(8.dp),
             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
@@ -197,6 +194,7 @@ fun FriendItem(name: String) {
         }
     }
 }
+
 
 @Composable
 fun AddFriendDialog(
