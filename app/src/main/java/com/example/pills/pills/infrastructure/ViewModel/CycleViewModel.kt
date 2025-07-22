@@ -60,12 +60,27 @@ private val supabaseClient: SupabaseClient
         }
     }
 
-    fun startNewCycle(startDate: String, pillCount: Int = 21) {
+    fun startNewCycle(startDate: String, pillCount: Int = 21, takeHour: String? = null) {
         viewModelScope.launch {
-            cycleRepository.createCycle(userId, startDate, pillCount)
+            cycleRepository.createCycle(userId, startDate, pillCount, takeHour)
             fetchActiveCycle()
         }
     }
+
+    fun deleteCurrentCycle() {
+        viewModelScope.launch {
+            val currentCycle = _cycleState.value?.getOrNull()
+            if (currentCycle != null) {
+                val result = cycleRepository.deleteCycle(currentCycle.id.toString())
+                if (result.isSuccess) {
+                    fetchActiveCycle()
+                } else {
+                    Log.e("CycleViewModel", "Error al eliminar ciclo", result.exceptionOrNull())
+                }
+            }
+        }
+    }
+
 
     private fun generateEvents(startDate: LocalDate, pillCount: Int) {
         val events = mutableMapOf<LocalDate, CalendarEvent>()
@@ -88,4 +103,6 @@ private val supabaseClient: SupabaseClient
 
         _calendarEvents.value = events
     }
+
+
 }

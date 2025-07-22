@@ -203,7 +203,6 @@ fun CalendarScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Calendario estático simplificado
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -311,7 +310,10 @@ fun CalendarScreen(
                                         }
 
                                         // Observaciones (cuadrado amarillo)
-                                        if (dayOfMonth % 3 == 0) {
+                                        if (                                            pillsOfMonth.pillsOfMonth.any {
+                                                LocalDate.parse(it.day_taken) == day.date &&
+                                                        it.complications != null
+                                            }) {
                                             Box(
                                                 modifier = Modifier
                                                     .size(8.dp)
@@ -396,100 +398,100 @@ fun CalendarScreen(
         Spacer(modifier = Modifier.height(24.dp))
     }
 
-    // Modal personalizado para anotaciones del día
     if (showDialog && dialogDate != null) {
-        var horaToma by remember { mutableStateOf("") }
-        var cantidadPastillas by remember { mutableStateOf("") }
-        var menstruacion by remember { mutableStateOf(false) }
-        var observacion by remember { mutableStateOf(0) }
-        val emojis = listOf("😊", "😐", "😴", "😢", "😠", "🤒", "😍", "🤧")
-
-        AlertDialog(
-            onDismissRequest = { showDialog = false },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        // TODO: Guardar anotación
-                        showDialog = false
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Pink),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.padding(horizontal = 8.dp)
-                ) {
-                    Text("Agregar", color = White, fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                Button(
-                    onClick = { showDialog = false },
-                    colors = ButtonDefaults.buttonColors(containerColor = White),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.padding(horizontal = 8.dp)
-                ) {
-                    Text("Cerrar", color = Pink, fontWeight = FontWeight.Bold)
-                }
-            },
-            title = {
-                Text(
-                    text = "Anotaciones del día: ${dialogDate?.dayOfMonth} de ${dialogDate?.month?.getDisplayName(java.time.format.TextStyle.FULL, Locale.getDefault())?.replaceFirstChar { it.uppercase() }}",
-                    color = Pink,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                )
-            },
-            text = {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedTextField(
-                            value = horaToma,
-                            onValueChange = { horaToma = it },
-                            label = { Text("Hora de toma") },
-                            modifier = Modifier.weight(1f)
-                        )
-                        OutlinedTextField(
-                            value = cantidadPastillas,
-                            onValueChange = { cantidadPastillas = it },
-                            label = { Text("Cantidad de pastillas") },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Menstruación", fontWeight = FontWeight.Bold)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Switch(
-                            checked = menstruacion,
-                            onCheckedChange = { menstruacion = it },
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = Pink,
-                                checkedTrackColor = PinkLight
-                            )
-                        )
-                        Text(if (menstruacion) "SÍ" else "NO", color = if (menstruacion) PinkDark else GrayText, fontWeight = FontWeight.Bold)
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("Observaciones", fontWeight = FontWeight.Bold, color = Pink)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        emojis.forEachIndexed { idx, emoji ->
-                            Box(
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(CircleShape)
-                                    .background(if (observacion == idx) PinkLight else Color.Transparent)
-                                    .clickable { observacion = idx },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(emoji, fontSize = 24.sp)
-                            }
-                        }
-                    }
-                }
-            },
-            shape = RoundedCornerShape(16.dp),
-            containerColor = White
+        PillEditDialog(
+            date = dialogDate!!,
+            onDismiss = { showDialog = false },
+            onSave = { date, hour, pillCount, menstruation, observation ->
+                pillViewModel.takePill(cycleState?.getOrNull()?.id.toString(), date, hour, observation)
+                Log.d("PillEditDialog", "Guardando: $date, $hour, $pillCount, $menstruation, $observation")
+                showDialog = false
+            }
         )
     }
+
+}
+
+@Composable
+fun PillEditDialog(
+    date: LocalDate,
+    onDismiss: () -> Unit,
+    onSave: (LocalDate, String, Int, Boolean, String) -> Unit, // params: fecha, hora, cantidad, menstruacion, observacion
+    initialHour: String = "",
+    initialPillCount: Int = 1,
+    initialMenstruation: Boolean = false,
+    initialObservation: Int = 0
+) {
+
+    var hour by remember { mutableStateOf(initialHour) }
+    var pillCount by remember { mutableStateOf(initialPillCount.toString()) }
+    var menstruation by remember { mutableStateOf(initialMenstruation) }
+    var observationText by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Editar toma del día ${date.dayOfMonth} de ${date.month.getDisplayName(java.time.format.TextStyle.FULL, Locale.getDefault()).replaceFirstChar { it.uppercase() }}",
+                color = Pink,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Hora de toma
+                OutlinedTextField(
+                    value = hour,
+                    onValueChange = { hour = it },
+                    label = { Text("Hora de toma (HH:mm)") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(Modifier.height(12.dp))
+
+                Text("Observaciones", fontWeight = FontWeight.Bold, color = Pink)
+                OutlinedTextField(
+                    value = observationText,
+                    onValueChange = { observationText = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(100.dp),
+                    placeholder = { Text("Escribe aquí tus observaciones...") },
+                    maxLines = 4,
+                    singleLine = false
+                )
+
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    onSave(date, hour, pillCount.toIntOrNull() ?: 1, menstruation, observationText)
+                    onDismiss()
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Pink),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.padding(horizontal = 8.dp)
+            ) {
+                Text("Guardar", color = White, fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            Button(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(containerColor = White),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.padding(horizontal = 8.dp)
+            ) {
+                Text("Cancelar", color = Pink, fontWeight = FontWeight.Bold)
+            }
+        },
+        shape = RoundedCornerShape(16.dp),
+        containerColor = White
+    )
 }

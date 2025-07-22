@@ -44,21 +44,13 @@ class FriendsViewModel(
         }
     }
 
-    fun addFriend(friendEmail: String, onSuccess: () -> Unit) {
+    fun addFriend(friendId: String, onSuccess: () -> Unit) {
         viewModelScope.launch {
-            friendRepository.getUserIdByEmail(friendEmail)
-                .onSuccess { friendId ->
-                    val result = friendRepository.addFriend(userId, friendId)
-                    if (result.isSuccess) {
-                        loadFriends()
-                        onSuccess()
-                    } else {
-                        Log.e("FriendsViewModel", "Error adding friend: ${result.exceptionOrNull()}")
-                    }
-                }
-                .onFailure {
-                    Log.e("FriendsViewModel", "Error finding user by email: ${it.message}")
-                }
+            val result = friendRepository.addFriend(userId, friendId)
+            if (result.isSuccess) {
+                loadFriends()
+                onSuccess()
+            }
         }
     }
 

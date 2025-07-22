@@ -1,6 +1,7 @@
 package com.example.pills.homePage
 
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -22,13 +23,18 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Face
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -61,9 +67,19 @@ import com.example.pills.ui.theme.GrayText
 import com.example.pills.ui.theme.LightGray
 import com.kizitonwose.calendar.compose.rememberCalendarState
 import org.koin.androidx.compose.koinViewModel
+import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+
+
+private val Pink = Color(0xFFEA5A8C)
+private val PinkLight = Color(0xFFFFF0F6)
+private val LightGray = Color(0xFFF3F3F3)
+private val GrayText = Color(0xFFBDBDBD)
+private val White = Color(0xFFFFFFFF)
+private val Black = Color(0xFF000000) // para que sea explícito
+
 
 @Composable
 fun HomeScreenUI(
@@ -119,15 +135,14 @@ fun HomeScreenUI(
             HeaderSection()
             ProtectionStatusSection()
             MascotReminderSection()
-            TakePillComponent()
             CycleStatusSection()
+            Spacer(Modifier.height(8.dp))
+            TakePillComponent()
             FriendsListSectionHome(
                 friends = friends,
                 onRemindClick = { friend -> friendsViewModel.sendReminder(friend.friend_id) },
                 navigateToFriends = navigateToFriends
             )
-
-            Spacer(Modifier.height(80.dp)) // Para no tapar el bottom nav
         }
     }
 }
@@ -161,29 +176,57 @@ fun HeaderSection(
 }
 
 @Composable
-fun ProtectionStatusSection() {
+fun ProtectionStatusSection(
+    cycleViewModel: CycleViewModel = koinViewModel(),
+    pillViewModel: PillViewModel = koinViewModel()
+) {
+    val cycleState by cycleViewModel.cycleState.collectAsState()
+    val pillsState by pillViewModel.uiState.collectAsState()
+
+    val cycle = cycleState?.getOrNull()
+    val pillsOfMonth = pillsState?.pillsOfMonth ?: emptyList()
+
+    // Total pastillas del ciclo o 0 si no hay
+    val totalPills = cycle?.pill_count ?: 0
+
+    // Contar cuántas pastillas se han tomado (status == "taken")
+    val takenPillsCount = pillsOfMonth.count { it.status == "taken" }
+
+    // Calcular porcentaje protección (evitar división por cero)
+    val protectionProgress = if (totalPills > 0) {
+        takenPillsCount.toFloat() / totalPills.toFloat()
+    } else 0f
+
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .shadow(2.dp, RoundedCornerShape(16.dp))
-            .clip(RoundedCornerShape(16.dp))
-            .background(Color.White)
-            .padding(12.dp)
+            .shadow(4.dp, RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(20.dp))
+            .background(White)
+            .padding(20.dp)
     ) {
         Column {
-            Text("Estado de protección: Caso protegido", color = GrayText, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(12.dp))
             LinearProgressIndicator(
-                progress = 0.8f,
-                color = Color(0xFF4CAF50),
+                progress = protectionProgress.coerceIn(0f, 1f),
+                color = Pink,
                 trackColor = LightGray,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(8.dp)
-                    .clip(RoundedCornerShape(4.dp))
+                    .height(10.dp)
+                    .clip(RoundedCornerShape(6.dp))
             )
-            Spacer(Modifier.height(8.dp))
-            Text("Píldora actual: 20 / 28", color = Black)
+            Spacer(Modifier.height(12.dp))
+            Text(
+                text = if (cycle != null)
+                    "Píldora actual: $takenPillsCount / $totalPills"
+                else
+                    "Sin información de ciclo",
+                color = Black,
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp
+            )
         }
     }
 }
@@ -237,63 +280,224 @@ fun CycleStatusSection(
     val cycleState by cycleViewModel.cycleState.collectAsState()
     val cycle = cycleState?.getOrNull()
 
-    if (cycle != null) {
-        val formatter = DateTimeFormatter.ofPattern("d 'de' MMMM", Locale("es", "MX"))
-        val startDate = cycle.start_date.format(formatter)
-        val endDate = cycle.end_date.format(formatter)
+    val formatter = DateTimeFormatter.ofPattern("d 'de' MMMM", Locale("es", "MX"))
 
-        StatusCard(
-            title = "ESTADO DEL CICLO",
-            content = null // ya no se usa contenido en texto plano
-        ) {
-            // Contenido personalizado dentro del StatusCard
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                DateBlock(title = "Inicio", date = startDate)
-                DateBlock(title = "Fin", date = endDate)
-            }
+    var startDate = "--/--/----"
+    var endDate = "--/--/----"
+
+    if (cycle != null) {
+        startDate = cycle.start_date.format(formatter)
+        val endDate2 = cycle.end_date?.format(formatter)
+        if (endDate2 != null) {
+            endDate = endDate2
         }
-    } else {
-        Text("Cargando ciclo...", modifier = Modifier.padding(16.dp))
+    }
+
+    val today = LocalDate.now().toString()
+
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    StatusCard {
+        Column(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "ESTADO DEL CICLO",
+                    color = Black,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
+
+                if (cycle != null) {
+                    TextButton(
+                        onClick = { showDeleteDialog = true },
+                        contentPadding = PaddingValues(4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = null,
+                            tint = Color.Red,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Eliminar",
+                            color = Color.Red,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp
+                        )
+                    }
+                }
+            }
+
+            if (cycle != null) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(PinkLight, RoundedCornerShape(12.dp))
+                        .padding(vertical = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    DateBlock(title = "Inicio", date = startDate)
+                    DateBlock(title = "Fin", date = endDate)
+                }
+            }
+
+            if (cycle == null) {
+                var pillCountInput by remember { mutableStateOf("21") }
+                var takeHourInput by remember { mutableStateOf("08:00") }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Cantidad de pastillas",
+                    color = Black,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp
+                )
+                OutlinedTextField(
+                    value = pillCountInput,
+                    onValueChange = { pillCountInput = it.filter { c -> c.isDigit() } },
+                    singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 6.dp),
+                    placeholder = { Text("21") }
+                )
+
+                Text(
+                    text = "Hora de toma (HH:mm)",
+                    color = Black,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp
+                )
+                OutlinedTextField(
+                    value = takeHourInput,
+                    onValueChange = { takeHourInput = it },
+                    singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 6.dp),
+                    placeholder = { Text("08:00") }
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Button(
+                    onClick = {
+                        val pillCount = pillCountInput.toIntOrNull() ?: 21
+                        val hour = takeHourInput.ifBlank { "08:00" }
+                        cycleViewModel.startNewCycle(today, pillCount, hour)
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Pink),
+                    shape = RoundedCornerShape(16.dp),
+                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "NUEVO CICLO",
+                        color = White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
+                }
+            }
+
+            if (showDeleteDialog) {
+                StyledDeleteDialog(
+                    onConfirm = {
+                        cycleViewModel.deleteCurrentCycle()
+                        showDeleteDialog = false
+                    },
+                    onDismiss = {
+                        showDeleteDialog = false
+                    }
+                )
+            }
+
+        }
     }
 }
 
 @Composable
+fun StyledDeleteDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = PinkLight, // Fondo rosa claro
+        shape = RoundedCornerShape(20.dp), // Esquinas redondeadas grandes
+        title = {
+            Text(
+                text = "¿Eliminar ciclo?",
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
+                color = Black
+            )
+        },
+        text = {
+            Text(
+                text = "¿Estás seguro de que deseas eliminar el ciclo actual? Esta acción no se puede deshacer.",
+                fontSize = 14.sp,
+                color = Black
+            )
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.padding(end = 8.dp)
+            ) {
+                Text(
+                    text = "Eliminar",
+                    color = White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp
+                )
+            }
+        },
+        dismissButton = {
+            OutlinedButton(
+                onClick = onDismiss,
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.padding(start = 8.dp)
+            ) {
+                Text(
+                    text = "Cancelar",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    color = Pink
+                )
+            }
+        }
+    )
+}
+
+
+@Composable
 fun StatusCard(
-    title: String,
-    content: String? = null,
-    contentBlock: @Composable (() -> Unit)? = null
+    contentBlock: @Composable (() -> Unit)
 ) {
     Box(
         modifier = Modifier
+
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
             .shadow(2.dp, RoundedCornerShape(16.dp))
             .clip(RoundedCornerShape(16.dp))
             .background(Color.White)
-            .padding(16.dp)
+            .padding(12.dp)
+            .background(White)
     ) {
-        Column {
-            Box(modifier = Modifier.fillMaxWidth().height(40.dp)) {
-                Text(
-                    title,
-                    color = Color.Black,
-                    fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.align(Alignment.Center),
-
-                )
-            }
-            Spacer(Modifier.height(8.dp))
-            if (content != null) {
-                Text(content, color = Color.Gray)
-            }
-            if (contentBlock != null) {
-                contentBlock()
-            }
-        }
+        contentBlock()
     }
 }
 

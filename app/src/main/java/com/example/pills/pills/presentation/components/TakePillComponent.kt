@@ -40,8 +40,10 @@ import com.kizitonwose.calendar.compose.rememberCalendarState
 import org.koin.androidx.compose.koinViewModel
 import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 private val Pink = Color(0xFFEA5A8C)
 private val PinkLight = Color(0xFFFFF0F6)
@@ -57,22 +59,12 @@ fun TakePillComponent(
 ) {
 
     val today = remember { LocalDate.now() }
-    val startMonth = remember { YearMonth.now().minusMonths(12) }
-    val endMonth = remember { YearMonth.now().plusMonths(12) }
     var visibleMonth by remember { mutableStateOf(YearMonth.now()) }
-    val calendarState = rememberCalendarState(
-        startMonth = startMonth,
-        endMonth = endMonth,
-        firstVisibleMonth = visibleMonth,
-        firstDayOfWeek = DayOfWeek.SUNDAY
-    )
 
 
     LaunchedEffect(visibleMonth) {
         cycleViewModel.fetchActiveCycle()
-        pillViewModel.loadPillOfDay(today)
-        calendarState.scrollToMonth(visibleMonth)
-
+        pillViewModel.loadPillOfToday(today)
     }
 
     val cycleState by cycleViewModel.cycleState.collectAsState()
@@ -84,10 +76,75 @@ fun TakePillComponent(
         today.format(DateTimeFormatter.ofPattern("d 'de' MMMM"))
     }
 
-    val isTakenToday = pillsOfMonth?.pillsOfMonth?.any {
+    val isTakenToday = pillsOfMonth?.pillOfToday?.let {
         LocalDate.parse(it.day_taken) == today && it.status == "taken"
     } == true
 
+    val now = LocalTime.now()
+
+    val isTimeToTake = cycleState?.getOrNull()?.take_hour?.let { hourStr ->
+        try {
+            val takeTime = LocalTime.parse(hourStr, DateTimeFormatter.ofPattern("HH:mm:ss"))
+            val now = LocalTime.now()
+            val minutesDiff = ChronoUnit.MINUTES.between(now, takeTime)
+
+            minutesDiff <= 30
+        } catch (e: Exception) {
+            false
+        }
+    } ?: false
+
+
+//    val isTimeToTake = cycleState?.getOrNull()?.take_hour?.let { hourStr ->
+//        try {
+//            val takeTime = LocalTime.parse(hourStr, DateTimeFormatter.ofPattern("HH:mm:ss"))
+//            val now = LocalTime.now()
+//
+//            !now.isBefore(takeTime)
+//
+//
+//        } catch (e: Exception) {
+//            false
+//        }
+//    } ?: false
+
+    val takeHourFormatted = cycleState?.getOrNull()?.take_hour?.let { hourStr ->
+        try {
+            val time = LocalTime.parse(hourStr, DateTimeFormatter.ofPattern("HH:mm:ss"))
+            val hour12 = if (time.hour % 12 == 0) 12 else time.hour % 12
+            val amPm = if (time.hour < 12) "Am" else "Pm"
+            Triple(hour12.toString(), time.minute.toString().padStart(2, '0'), amPm)
+        } catch (e: Exception) {
+            Triple("--", "--", "")
+        }
+    } ?: Triple("--", "--", "")
+
+    Log.d("TakePillComponent", "Take hour formatted: ${cycleState?.getOrNull()?.take_hour}")
+
+    val nextDoseText = cycleState?.getOrNull()?.take_hour?.let { hourStr ->
+        try {
+            val takeTime = LocalTime.parse(hourStr, DateTimeFormatter.ofPattern("HH:mm:ss"))
+            val now = LocalTime.now()
+
+            val minutesDiff = ChronoUnit.MINUTES.between(now, takeTime)
+
+            when {
+                minutesDiff > 0 -> {
+                    val hours = minutesDiff / 60
+                    val minutes = minutesDiff % 60
+                    "Próxima toma en %02d:%02d hrs".format(hours, minutes)
+                }
+                minutesDiff >= -30 -> { // Dentro de ventana de 30 min antes o después
+                    "Puedes tomarla ahora"
+                }
+                else -> {
+                    "Toma atrasada"
+                }
+            }
+        } catch (e: Exception) {
+            "Hora de toma no disponible"
+        }
+    } ?: "Hora de toma no disponible"
 
 
     Box(
@@ -141,29 +198,45 @@ fun TakePillComponent(
                             .padding(horizontal = 12.dp, vertical = 6.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("8", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Black)
+                            Text(takeHourFormatted.first, fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Black)
                             Text(":", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Pink)
-                            Text("30", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Black)
+                            Text(takeHourFormatted.second, fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Black)
                         }
                     }
-                    Text("Pm", color = GrayText, fontSize = 14.sp, modifier = Modifier.padding(start = 4.dp))
+                    Text(
+                        takeHourFormatted.third,
+                        color = GrayText,
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(start = 4.dp)
+                    )
                     Spacer(modifier = Modifier.width(12.dp))
                     Button(
                         onClick = {
-                            if (!isTakenToday) {
+                            if (!isTakenToday && isTimeToTake) {
                                 pillViewModel.takePill(cycleState?.getOrNull()?.id ?: "", today, "taken", null)
                             }
                         },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isTakenToday) LightGray else Pink
+                            containerColor = when {
+                                isTakenToday -> LightGray
+                                !isTimeToTake -> LightGray
+                                else -> Pink
+                            }
                         ),
                         shape = RoundedCornerShape(16.dp),
                         contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
-                        enabled = !isTakenToday
+                        enabled = !isTakenToday && isTimeToTake
                     ) {
                         Text(
-                            text = if (isTakenToday) "Ya registrada" else "Registrar toma",
-                            color = if (isTakenToday) GrayText else White,
+                            text = when {
+                                isTakenToday -> "Ya registrada"
+                                !isTimeToTake -> "Espera la hora"
+                                else -> "Registrar toma"
+                            },
+                            color = when {
+                                isTakenToday || !isTimeToTake -> GrayText
+                                else -> White
+                            },
                             fontWeight = FontWeight.Bold,
                             fontSize = 12.sp
                         )
@@ -172,12 +245,13 @@ fun TakePillComponent(
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Próxima toma en 02:00 hrs",
+                    text = nextDoseText,
                     color = GrayText,
                     fontSize = 12.sp,
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center
                 )
+
             }
         }
     }
