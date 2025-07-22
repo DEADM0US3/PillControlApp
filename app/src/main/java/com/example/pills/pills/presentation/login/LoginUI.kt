@@ -186,5 +186,16 @@ fun LoginScreen(
         ) {
             Text("¿No tienes cuenta? Regístrate Aquí", color = Color(0xFFD56A83), fontWeight = FontWeight.Bold)
         }
+
+        // O si prefieres un texto clickeable en lugar de botón:
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "Continuar sin cuenta",
+            color = Color.White,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.clickable { navigateToHome() }
+        )
     }
 }
