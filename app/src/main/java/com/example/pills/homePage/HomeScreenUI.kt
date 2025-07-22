@@ -93,6 +93,7 @@ fun HomeScreenUI(
         firstDayOfWeek = java.time.DayOfWeek.SUNDAY
     )
 
+
     LaunchedEffect(visibleMonth) {
         cycleViewModel.fetchActiveCycle()
         pillViewModel.loadPillsOfMonth(visibleMonth.year, visibleMonth.monthValue)
@@ -263,7 +264,23 @@ fun CycleStatusSection(
             }
         }
     } else {
-        Text("Cargando ciclo...", modifier = Modifier.padding(16.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            CircularProgressIndicator(
+                color = Color(0xFFFF4081),
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Cargando ciclo...",
+                color = Color(0xFF555555),
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+
     }
 }
 
