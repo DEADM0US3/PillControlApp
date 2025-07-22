@@ -1,32 +1,77 @@
 package com.example.pills.pills.domain.repository
 
+import android.util.Log
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class Friend(
+    val id: String? = null,
+    val user_id: String,
+    val friend_id: String,
+    val created_at: String? = null
+)
+
+@Serializable
+data class User(
+    val id: String,
+    val name: String? = null,
+)
+
+@Serializable
+data class FriendWithUser(
+    val user_id: String,
+    val friend_id: String,
+    val friend_user_id: String,
+    val name: String? = null,
+)
+
 
 class FriendRepository(private val supabaseClient: SupabaseClient) {
 
     suspend fun addFriend(userId: String?, friendId: String): Result<Unit> = withContext(Dispatchers.IO) {
-        try {
-            supabaseClient.from("friends").insert(
-                mapOf("user_id" to userId, "friend_id" to friendId)
-            )
+        if (userId == null) return@withContext Result.failure(IllegalArgumentException("userId es null"))
+
+        return@withContext try {
+            val friend = Friend(user_id = userId, friend_id = friendId)
+            supabaseClient.from("friends").insert(friend)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    suspend fun getFriends(userId: String): Result<List<Map<String, Any>>> = withContext(Dispatchers.IO) {
-        try {
-            val response = supabaseClient.from("friends").select {
-                filter { eq("user_id", userId) }
-            }.decodeList<Map<String, Any>>()
+    suspend fun getFriends(userId: String): Result<List<FriendWithUser>> = withContext(Dispatchers.IO) {
+        return@withContext try {
+            val response = supabaseClient
+                .from("friends_with_user")
+                .select{
+                    filter { eq("user_id", userId) }
+                }
+                .decodeList<FriendWithUser>()
 
+
+
+            Log.d("FriendRepository", "Friends with user info for $userId: $response")
             Result.success(response)
         } catch (e: Exception) {
+            Log.e("FriendRepository", "Error fetching friends", e)
             Result.failure(e)
+        }
+    }
+
+    suspend fun getUserIdByEmail(email: String): Result<String> = withContext(Dispatchers.IO) {
+        return@withContext runCatching {
+            val user = supabaseClient.from("users")
+                .select {
+                    filter { eq("email", email) }
+                }
+                .decodeSingle<User>()
+
+            user.id
         }
     }
 }

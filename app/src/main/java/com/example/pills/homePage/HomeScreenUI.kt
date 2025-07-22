@@ -38,8 +38,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,26 +54,53 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pills.R
+import com.example.pills.pills.domain.repository.FriendWithUser
 import com.example.pills.pills.presentation.calendar.PillViewModel
 import com.example.pills.pills.presentation.components.TakePillComponent
 import com.example.pills.pills.presentation.cycle.CycleViewModel
+import com.example.pills.pills.presentation.friends.FriendsViewModel
 import com.example.pills.ui.theme.Pink
 import com.example.pills.ui.theme.Black
 import com.example.pills.ui.theme.GrayText
 import com.example.pills.ui.theme.LightGray
-import com.patrykandpatrick.vico.compose.chart.Chart
-import com.patrykandpatrick.vico.compose.chart.line.lineChart
-import com.patrykandpatrick.vico.core.chart.Chart
-import com.patrykandpatrick.vico.core.entry.ChartEntryModelProducer
-import com.patrykandpatrick.vico.core.entry.FloatEntry
+import com.kizitonwose.calendar.compose.rememberCalendarState
 import org.koin.androidx.compose.koinViewModel
+import java.time.LocalDate
+import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 @Composable
 fun HomeScreenUI(
-    navigateToFriends : () -> Unit
+    navigateToFriends : () -> Unit,
+    cycleViewModel: CycleViewModel = koinViewModel(),
+    pillViewModel: PillViewModel = koinViewModel(),
+    friendsViewModel: FriendsViewModel = koinViewModel() // <-- ViewModel con lógica de amigas
 ) {
+
+    val friends = friendsViewModel.friends
+
+    val startMonth = remember { YearMonth.now().minusMonths(12) }
+    val endMonth = remember { YearMonth.now().plusMonths(12) }
+    var visibleMonth by remember { mutableStateOf(YearMonth.now()) }
+
+    val calendarState = rememberCalendarState(
+        startMonth = startMonth,
+        endMonth = endMonth,
+        firstVisibleMonth = visibleMonth,
+        firstDayOfWeek = java.time.DayOfWeek.SUNDAY
+    )
+
+    LaunchedEffect(visibleMonth) {
+        cycleViewModel.fetchActiveCycle()
+        pillViewModel.loadPillsOfMonth(visibleMonth.year, visibleMonth.monthValue)
+        calendarState.scrollToMonth(visibleMonth)
+
+    }
+    LaunchedEffect(Unit) {
+        friendsViewModel.loadFriends()
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -97,9 +126,12 @@ fun HomeScreenUI(
             MascotReminderSection()
             TakePillComponent()
             CycleStatusSection()
-            FriendsListSection(
-                navigateToFriends
+            FriendsListSectionHome(
+                friends = friends,
+                onRemindClick = { friend -> friendsViewModel.sendReminder(friend.friend_id) },
+                navigateToFriends = navigateToFriends
             )
+
             Spacer(Modifier.height(80.dp)) // Para no tapar el bottom nav
         }
     }
@@ -197,12 +229,18 @@ fun CycleStatusSection(
         val startDate = cycle.start_date.format(formatter)
         val endDate = cycle.end_date.format(formatter)
 
-
-        Column {
-            StatusCard(
-                title = "Estado del ciclo: En toma",
-                content = "Inicio: $startDate\nFin: $endDate"
-            )
+        StatusCard(
+            title = "ESTADO DEL CICLO",
+            content = null // ya no se usa contenido en texto plano
+        ) {
+            // Contenido personalizado dentro del StatusCard
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                DateBlock(title = "Inicio", date = startDate)
+                DateBlock(title = "Fin", date = endDate)
+            }
         }
     } else {
         Text("Cargando ciclo...", modifier = Modifier.padding(16.dp))
@@ -210,7 +248,11 @@ fun CycleStatusSection(
 }
 
 @Composable
-fun StatusCard(title: String, content: String) {
+fun StatusCard(
+    title: String,
+    content: String? = null,
+    contentBlock: @Composable (() -> Unit)? = null
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -218,19 +260,60 @@ fun StatusCard(title: String, content: String) {
             .shadow(2.dp, RoundedCornerShape(16.dp))
             .clip(RoundedCornerShape(16.dp))
             .background(Color.White)
-            .padding(12.dp)
+            .padding(16.dp)
     ) {
         Column {
-            Text(title, color = Black, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(4.dp))
-            Text(content, color = GrayText)
+            Box(modifier = Modifier.fillMaxWidth().height(40.dp)) {
+                Text(
+                    title,
+                    color = Color.Black,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.align(Alignment.Center),
+
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            if (content != null) {
+                Text(content, color = Color.Gray)
+            }
+            if (contentBlock != null) {
+                contentBlock()
+            }
         }
     }
 }
 
 @Composable
-fun FriendsListSection(
-    navigateToFriends : () -> Unit
+fun DateBlock(title: String, date: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.padding(bottom = 4.dp)
+        )
+        Box(
+            modifier = Modifier
+                .background(color = Color(0xFFFFE0EB), shape = RoundedCornerShape(8.dp))
+                .padding(horizontal = 20.dp, vertical = 10.dp)
+        ) {
+            Text(
+                text = date,
+                color = Color(0xFFE91E63),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+    }
+}
+
+
+@Composable
+fun FriendsListSectionHome(
+    friends: List<FriendWithUser>,
+    onRemindClick: (FriendWithUser) -> Unit,
+    navigateToFriends: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -256,15 +339,20 @@ fun FriendsListSection(
                 )
             }
             Spacer(Modifier.height(8.dp))
-            FriendItem("Valeria García")
-            FriendItem("Yesenia Torres")
-            FriendItem("Luna Aguilar")
+
+            // Mostrar máximo 3 amigas como resumen
+            friends.take(3).forEach { friend ->
+                FriendItemHome(user = friend, onRemind = { onRemindClick(friend) })
+            }
         }
     }
 }
 
 @Composable
-fun FriendItem(name: String) {
+fun FriendItemHome(
+    user: FriendWithUser,
+    onRemind: () -> Unit
+) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -273,9 +361,14 @@ fun FriendItem(name: String) {
     ) {
         CircleAvatar()
         Spacer(Modifier.width(8.dp))
-        Text(name, modifier = Modifier.weight(1f), color = Black)
+        Text(
+            text = user.name ?: "Sin nombre",
+            modifier = Modifier.weight(1f),
+            color = Black,
+            fontSize = 16.sp
+        )
         Button(
-            onClick = { /* Recordar */ },
+            onClick = onRemind,
             colors = ButtonDefaults.buttonColors(containerColor = Pink),
             shape = RoundedCornerShape(8.dp),
             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
@@ -284,6 +377,7 @@ fun FriendItem(name: String) {
         }
     }
 }
+
 
 
 @Composable

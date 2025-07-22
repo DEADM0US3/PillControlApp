@@ -1,50 +1,65 @@
 package com.example.pills.pills.presentation.friends
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pills.pills.domain.repository.FriendRepository
+import com.example.pills.pills.domain.repository.FriendWithUser
 import com.example.pills.pills.domain.repository.NotificationRepository
+import com.example.pills.pills.domain.repository.User
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.launch
 
-
-class FriendsViewModel (
+class FriendsViewModel(
     private val friendRepository: FriendRepository,
     private val notificationRepository: NotificationRepository,
     private val supabaseClient: SupabaseClient
 ) : ViewModel() {
 
+    private val userId = supabaseClient.auth.currentUserOrNull()?.id.orEmpty()
 
-    val user = supabaseClient.auth.currentUserOrNull()
-    val userId = user?.id.toString()
-    
-    var friends by mutableStateOf<List<String>>(emptyList())
-        private set
+    var friends by mutableStateOf<List<FriendWithUser>>(emptyList())
 
     var loading by mutableStateOf(false)
+        private set
 
     fun loadFriends() {
         viewModelScope.launch {
             loading = true
             val result = friendRepository.getFriends(userId)
             loading = false
-            friends = result.getOrElse { emptyList() }.mapNotNull {
-                it["friend_id"]?.toString() // Puedes hacer una consulta más completa si quieres el nombre
+
+            result.onSuccess { list ->
+                friends = list
+                Log.d("FriendsViewModel", "Loaded friends: $friends")
+            }.onFailure { error ->
+
+                Log.e("FriendsViewModel", "Error loading friends", error)
+                friends = emptyList()
+
             }
         }
     }
 
-    fun addFriend(friendId: String, onSuccess: () -> Unit) {
+    fun addFriend(friendEmail: String, onSuccess: () -> Unit) {
         viewModelScope.launch {
-            val result = friendRepository.addFriend(userId, friendId)
-            if (result.isSuccess) {
-                loadFriends()
-                onSuccess()
-            }
+            friendRepository.getUserIdByEmail(friendEmail)
+                .onSuccess { friendId ->
+                    val result = friendRepository.addFriend(userId, friendId)
+                    if (result.isSuccess) {
+                        loadFriends()
+                        onSuccess()
+                    } else {
+                        Log.e("FriendsViewModel", "Error adding friend: ${result.exceptionOrNull()}")
+                    }
+                }
+                .onFailure {
+                    Log.e("FriendsViewModel", "Error finding user by email: ${it.message}")
+                }
         }
     }
 

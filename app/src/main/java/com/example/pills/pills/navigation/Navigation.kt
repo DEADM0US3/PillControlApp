@@ -22,7 +22,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import com.example.pills.pills.presentation.configuration.ConfigurationScreen
-import com.example.pills.pills.presentation.friends.FrienScreen
+import com.example.pills.pills.presentation.friends.FriendScreen
 import com.example.pills.pills.presentation.profile.ProfileScreen
 import com.example.pills.pills.presentation.profile.EditProfileScreen
 import com.example.pills.pills.presentation.profile.HelpScreen
@@ -192,7 +192,7 @@ fun AuthNavigation(
                 Box(
                     modifier = Modifier.weight(1f)
                 ) {
-                    FrienScreen(
+                    FriendScreen(
                         onBackPressed = { navController.navigate(Screen.HomeScreen.route)},
                     )
                 }

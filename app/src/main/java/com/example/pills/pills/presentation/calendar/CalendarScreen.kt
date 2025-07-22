@@ -49,12 +49,13 @@ private val LightGray = Color(0xFFF3F3F3)
 private val GrayText = Color(0xFFBDBDBD)
 private val White = Color(0xFFFFFFFF)
 private val RedPeriod = Color(0xFFE53935)
-private val YellowObs = Color(0xFFFFF176)
+private val YellowObs = Color(0xFF7D00B9)
 
 val colorMenstruation = Color(0xFFFFC1C1)  // Rosa claro
 val colorFertile = Color(0xFFC1FFC1)       // Verde claro
-val colorOvulation = Color(0xFFFFFFC1)     // Amarillo claro
+val colorOvulation = Color(0xFFEDF5FD)     // Amarillo claro
 val colorPillTaken = Color(0xFFA6FFC9)     // Verde fuerte
+val Today = Color(0xFFA6E3FF)     // Verde fuerte
 
 @Composable
 fun CalendarScreen(
@@ -225,11 +226,7 @@ fun CalendarScreen(
                         
                         
                         val cellColor = when {
-                            pillsOfMonth.pillsOfMonth.any {
-                                LocalDate.parse(it.day_taken) == day.date &&
-                                        it.status == "taken"
-                            } -> colorPillTaken
-                            isToday -> White
+                            isToday -> Today
                             isSelected -> Pink
                             dayEvent?.isMenstruation == true -> colorMenstruation
                             dayEvent?.isOvulation == true -> GrayLine
@@ -254,8 +251,8 @@ fun CalendarScreen(
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(cellColor)
                                 .border(
-                                    width = if (isToday) 2.dp else 1.dp,
-                                    color = if (isToday) PinkDark else GrayLine,
+                                    width = 1.dp,
+                                    color = GrayLine,
                                     shape = RoundedCornerShape(12.dp)
                                 )
                                 .clickable(enabled = isInMonth) {
