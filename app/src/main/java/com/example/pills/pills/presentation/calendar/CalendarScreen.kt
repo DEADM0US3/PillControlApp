@@ -40,6 +40,7 @@ import java.util.*
 // Paleta de colores simplificada y estable
 private val Pink = Color(0xFFEA5A8C)
 private val PinkLight = Color(0xFFFFF0F6)
+private val PinkLigth2 = Color(0xFFFF98CD)
 private val PinkDark = Color(0xFFD81B60)
 private val PinkShadow = Color(0x33EA5A8C)
 private val CardShadow = Color(0x22000000)
@@ -162,7 +163,8 @@ fun CalendarScreen(
                     .padding(horizontal = 28.dp, vertical = 12.dp)
             ) {
                 Text(
-                    text = visibleMonth.month.getDisplayName(TextStyle.FULL, Locale.getDefault()).replaceFirstChar { it.uppercase() }.uppercase(),
+                    text = visibleMonth.month.getDisplayName(TextStyle.FULL, Locale.getDefault())
+                        .replaceFirstChar { it.uppercase() }.uppercase(),
                     color = White,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
@@ -188,7 +190,15 @@ fun CalendarScreen(
 
         // Encabezado de días de la semana
         Row(Modifier.fillMaxWidth()) {
-            listOf("Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado").forEach { dayName ->
+            listOf(
+                "Domingo",
+                "Lunes",
+                "Martes",
+                "Miércoles",
+                "Jueves",
+                "Viernes",
+                "Sábado"
+            ).forEach { dayName ->
                 Text(
                     text = dayName.take(3),
                     modifier = Modifier.weight(1f),
@@ -221,10 +231,11 @@ fun CalendarScreen(
                     dayContent = { day ->
                         val isSelected = day.date == selectedDate
                         val isToday = day.date == today
-                        val isInMonth = day.position == com.kizitonwose.calendar.core.DayPosition.MonthDate
+                        val isInMonth =
+                            day.position == com.kizitonwose.calendar.core.DayPosition.MonthDate
                         val dayEvent = calendarEvents[day.date]
-                        
-                        
+
+
                         val cellColor = when {
                             isToday -> Today
                             isSelected -> Pink
@@ -234,7 +245,6 @@ fun CalendarScreen(
                             isInMonth -> PinkLight
                             else -> LightGray.copy(alpha = 0.5f)
                         }
-
 
 
                         // Determinar el color del texto
@@ -354,7 +364,12 @@ fun CalendarScreen(
                                 .background(PinkDark)
                         )
                         Spacer(modifier = Modifier.width(10.dp))
-                        Text("Pastilla tomada", fontSize = 12.sp, color = Black, fontWeight = FontWeight.Medium)
+                        Text(
+                            "Pastilla tomada",
+                            fontSize = 12.sp,
+                            color = Black,
+                            fontWeight = FontWeight.Medium
+                        )
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
@@ -364,7 +379,12 @@ fun CalendarScreen(
                                 .background(Pink, RoundedCornerShape(2.dp))
                         )
                         Spacer(modifier = Modifier.width(10.dp))
-                        Text("Día marcado", fontSize = 12.sp, color = Black, fontWeight = FontWeight.Medium)
+                        Text(
+                            "Día marcado",
+                            fontSize = 12.sp,
+                            color = Black,
+                            fontWeight = FontWeight.Medium
+                        )
                     }
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -376,7 +396,12 @@ fun CalendarScreen(
                                 .background(GrayText)
                         )
                         Spacer(modifier = Modifier.width(10.dp))
-                        Text("Día de descanso", fontSize = 12.sp, color = Black, fontWeight = FontWeight.Medium)
+                        Text(
+                            "Día de descanso",
+                            fontSize = 12.sp,
+                            color = Black,
+                            fontWeight = FontWeight.Medium
+                        )
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
@@ -386,7 +411,12 @@ fun CalendarScreen(
                                 .background(YellowObs)
                         )
                         Spacer(modifier = Modifier.width(10.dp))
-                        Text("Observaciones", fontSize = 12.sp, color = Black, fontWeight = FontWeight.Medium)
+                        Text(
+                            "Observaciones",
+                            fontSize = 12.sp,
+                            color = Black,
+                            fontWeight = FontWeight.Medium
+                        )
                     }
                 }
             }
@@ -405,90 +435,132 @@ fun CalendarScreen(
 
         AlertDialog(
             onDismissRequest = { showDialog = false },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        // TODO: Guardar anotación
-                        showDialog = false
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Pink),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.padding(horizontal = 8.dp)
-                ) {
-                    Text("Agregar", color = White, fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                Button(
-                    onClick = { showDialog = false },
-                    colors = ButtonDefaults.buttonColors(containerColor = White),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.padding(horizontal = 8.dp)
-                ) {
-                    Text("Cerrar", color = Pink, fontWeight = FontWeight.Bold)
-                }
-            },
+            shape = RoundedCornerShape(24.dp),
+            containerColor = PinkLight,
+            tonalElevation = 4.dp,
+            confirmButton = {},
+            dismissButton = {},
             title = {
                 Text(
-                    text = "Anotaciones del día: ${dialogDate?.dayOfMonth} de ${dialogDate?.month?.getDisplayName(java.time.format.TextStyle.FULL, Locale.getDefault())?.replaceFirstChar { it.uppercase() }}",
-                    color = Pink,
+                    text = "Anotaciones del día: ${dialogDate?.dayOfMonth} de ${
+                        dialogDate?.month?.getDisplayName(
+                            TextStyle.FULL,
+                            Locale.getDefault()
+                        )?.replaceFirstChar { it.uppercase() }
+                    }",
+                    color = PinkDark,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
+                    fontSize = 20.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
                 )
             },
             text = {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 300.dp, max = 500.dp) // Aumenta el alto del modal
+                        .verticalScroll(rememberScrollState()) // Scroll si se llena
+                        .padding(horizontal = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
                         OutlinedTextField(
                             value = horaToma,
                             onValueChange = { horaToma = it },
                             label = { Text("Hora de toma") },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp)
                         )
                         OutlinedTextField(
                             value = cantidadPastillas,
                             onValueChange = { cantidadPastillas = it },
-                            label = { Text("Cantidad de pastillas") },
-                            modifier = Modifier.weight(1f)
+                            label = { Text("Cantidad") },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp)
                         )
                     }
-                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Menstruación", fontWeight = FontWeight.Bold)
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("¿Menstruación?", fontWeight = FontWeight.Bold, color = PinkDark)
+                        Spacer(modifier = Modifier.width(12.dp))
                         Switch(
                             checked = menstruacion,
                             onCheckedChange = { menstruacion = it },
                             colors = SwitchDefaults.colors(
-                                checkedThumbColor = Pink,
-                                checkedTrackColor = PinkLight
+                                checkedThumbColor = PinkDark,
+                                checkedTrackColor = PinkLigth2,
+                                uncheckedThumbColor = GrayLine,
+                                uncheckedTrackColor = LightGray
                             )
                         )
-                        Text(if (menstruacion) "SÍ" else "NO", color = if (menstruacion) PinkDark else GrayText, fontWeight = FontWeight.Bold)
                     }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text("¿Cómo te sentiste hoy?", fontWeight = FontWeight.Bold, color = PinkDark)
+
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("Observaciones", fontWeight = FontWeight.Bold, color = Pink)
+
+                    // Caritas en 2 filas
+                    val emojis = listOf("😊", "😐", "😴", "😢", "😠", "🤒", "😍", "🤧")
+                    val rows = emojis.chunked(4)
+                    rows.forEach { row ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            row.forEachIndexed { index, emoji ->
+                                val absoluteIndex = rows.indexOf(row) * 4 + index
+                                Box(
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .clip(CircleShape)
+                                        .background(if (observacion == absoluteIndex) Pink else White)
+                                        .border(1.dp, PinkShadow, CircleShape)
+                                        .clickable { observacion = absoluteIndex },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(emoji, fontSize = 22.sp)
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        emojis.forEachIndexed { idx, emoji ->
-                            Box(
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(CircleShape)
-                                    .background(if (observacion == idx) PinkLight else Color.Transparent)
-                                    .clickable { observacion = idx },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(emoji, fontSize = 24.sp)
-                            }
+                        Button(
+                            onClick = { showDialog = false },
+                            colors = ButtonDefaults.buttonColors(containerColor = White),
+                            shape = RoundedCornerShape(14.dp)
+                        ) {
+                            Text("Cerrar", color = PinkDark, fontWeight = FontWeight.Bold)
+                        }
+
+                        Button(
+                            onClick = {
+                                // TODO: Guardar datos
+                                showDialog = false
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Pink),
+                            shape = RoundedCornerShape(14.dp)
+                        ) {
+                            Text("Guardar", color = White, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
-            },
-            shape = RoundedCornerShape(16.dp),
-            containerColor = White
+            }
         )
-    }
+}
 }
