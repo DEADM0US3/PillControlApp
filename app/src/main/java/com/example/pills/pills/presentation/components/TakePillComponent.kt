@@ -213,7 +213,7 @@ fun TakePillComponent(
             },
             title = {
                 Text(
-                    text = "¡Toma registrada! 💊",
+                    text = "¡Toma Registrada! 💊",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF333333)
