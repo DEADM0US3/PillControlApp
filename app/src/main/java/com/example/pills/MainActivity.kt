@@ -27,6 +27,8 @@ import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.pills.notifications.MyPeriodicWorker
@@ -49,6 +51,7 @@ class MainActivity : ComponentActivity() {
     )
     override fun onCreate(savedInstanceState: Bundle?) {
         setupPeriodicWork()
+        setupOneTimeWork()
         super.onCreate(savedInstanceState)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -84,6 +87,18 @@ class MainActivity : ComponentActivity() {
             .enqueueUniquePeriodicWork(
                 "MyPeriodicWork",
                 ExistingPeriodicWorkPolicy.KEEP,
+                workRequest
+            )
+    }
+
+    private fun setupOneTimeWork() {
+        val workRequest = OneTimeWorkRequestBuilder<MyPeriodicWorker>()
+            .build()
+
+        WorkManager.getInstance(this)
+            .enqueueUniqueWork(
+                "MyOneTimeWork",
+                ExistingWorkPolicy.REPLACE,
                 workRequest
             )
     }

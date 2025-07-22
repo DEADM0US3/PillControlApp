@@ -5,6 +5,28 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerialName
+
+@Serializable
+data class NotificationWithUser(
+    @SerialName("notification_id")
+    val notificationId: String,
+
+    @SerialName("sender_id")
+    val senderId: String,
+
+    @SerialName("receiver_id")
+    val receiverId: String,
+
+    val message: String,
+
+    @SerialName("sender_user_id")
+    val senderUserId: String,
+
+    @SerialName("sender_name")
+    val senderName: String
+)
 
 class NotificationRepository(private val supabaseClient: SupabaseClient) {
 
@@ -28,11 +50,11 @@ class NotificationRepository(private val supabaseClient: SupabaseClient) {
         }
 
 
-    suspend fun getNotifications(receiverId: String): Result<List<Notification>> = withContext(Dispatchers.IO) {
+    suspend fun getNotifications(receiverId: String): Result<List<NotificationWithUser>> = withContext(Dispatchers.IO) {
         try {
-            val response = supabaseClient.from("notifications").select {
+            val response = supabaseClient.from("notifications_with_user").select {
                 filter { eq("receiver_id", receiverId) }
-            }.decodeList<Notification>()
+            }.decodeList<NotificationWithUser>()
 
             Result.success(response)
         } catch (e: Exception) {
@@ -40,15 +62,15 @@ class NotificationRepository(private val supabaseClient: SupabaseClient) {
         }
     }
 
-    suspend fun getAndDeleteNotificationsForUser(userId: String): Result<List<Notification>> {
+    suspend fun getAndDeleteNotificationsForUser(userId: String): Result<List<NotificationWithUser>> {
         return runCatching {
-            val notifications = supabaseClient.from("notifications")
+            val notifications = supabaseClient.from("notifications_with_user")
                 .select {
                     filter {
                         eq("receiver_id", userId)
                     }
                 }
-                .decodeList<Notification>()
+                .decodeList<NotificationWithUser>()
 
             if (notifications.isNotEmpty()) {
                 supabaseClient.from("notifications")

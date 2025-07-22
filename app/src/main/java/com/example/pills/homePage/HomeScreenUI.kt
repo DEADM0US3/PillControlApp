@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -45,6 +46,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pills.R
@@ -188,28 +190,46 @@ fun ProtectionStatusSection() {
 
 
 @Composable
-fun MascotReminderSection() {
+fun MascotReminderSection(
+    homeViewModel: HomeViewModel = koinViewModel()
+) {
+    val uiState by homeViewModel.uiState.collectAsState()
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(10.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("No olvides estar tomando agua", color = Pink, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(12.dp))
+            Text(
+                text = uiState.mascotMessage,
+                color = Pink,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                fontSize = 16.sp
+            )
+            Spacer(Modifier.height(5.dp))
             Box(
-                modifier = Modifier
+                /*modifier = Modifier
                     .size(190.dp)
                     .clip(CircleShape)
-                    .background(LightGray),
+                    .background(LightGray.copy(alpha = 0.3f))
+                    .padding(8.dp), */
+                modifier = Modifier.offset(y = (-40).dp), // Sube el icono 10dp
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.Face, contentDescription = null, modifier = Modifier.size(100.dp))
+                Icon(
+                    painter = painterResource(id = uiState.mascotImageRes),
+                    contentDescription = "Mascota",
+                    modifier = Modifier.size(250.dp),
+                    tint = Color.Unspecified
+                )
             }
         }
     }
 }
+
 @Composable
 fun CycleStatusSection(
     cycleViewModel: CycleViewModel = koinViewModel()
@@ -370,8 +390,6 @@ fun FriendItemHome(
         }
     }
 }
-
-
 
 @Composable
 fun CircleAvatar() {

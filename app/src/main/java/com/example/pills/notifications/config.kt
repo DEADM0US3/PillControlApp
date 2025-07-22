@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.work.CoroutineWorker
 import androidx.work.PeriodicWorkRequestBuilder
@@ -13,29 +14,32 @@ import java.util.concurrent.TimeUnit
 import com.example.pills.R
 import com.example.pills.pills.domain.repository.NotificationRepository
 import com.example.pills.pills.domain.supabase.SupabaseClientProvider
+import io.github.jan.supabase.auth.auth
 
 class MyPeriodicWorker(
     context: Context,
     workerParams: WorkerParameters
 ) : CoroutineWorker(context, workerParams) {
 
-    private val notificationRepository: NotificationRepository = NotificationRepository(supabaseClient = SupabaseClientProvider.client)
+    private val notificationRepository: NotificationRepository = NotificationRepository(SupabaseClientProvider.client)
 
-    @SuppressLint("RestrictedApi")
+
     override suspend fun doWork(): Result {
-        val userId = inputData.getString("userId") ?: return Result.failure()
+        val userId: String = SupabaseClientProvider.client.auth.currentUserOrNull()?.id.orEmpty()
 
-        return when (val result = notificationRepository.getAndDeleteNotificationsForUser(userId)) {
-            is Result.Success -> {
-                result.getOrNull()?.forEach { notification ->
-                    showNotification("Mensaje de ${notification.sender_id}", notification.message)
-                }
-                Result.success()
+        Log.d("Id", "User ID: $userId")
+        val result = notificationRepository.getAndDeleteNotificationsForUser(userId)
+        Log.d("MyPeriodicWorker", "Notifications fetched: ${result}")
+        return if (result.isSuccess) {
+            val notifications = result.getOrNull() ?: emptyList()
+            notifications.forEach { notification ->
+                showNotification("Mensaje de ${notification.senderName}", notification.message)
             }
-            else -> Result.failure()
+            Result.success()
+        } else {
+            Result.failure()
         }
     }
-
 
     private fun showNotification(title: String, message: String) {
         val channelId = "pill_reminder_channel"
