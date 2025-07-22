@@ -1,8 +1,8 @@
-package com.example.pills.pills.presentation.calendar
+package com.example.pills.pills.infrastructure.ViewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.pills.pills.domain.repository.Pill
+import com.example.pills.pills.domain.entities.Pill
 import com.example.pills.pills.domain.repository.PillRepository
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth

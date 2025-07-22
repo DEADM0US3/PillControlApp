@@ -1,4 +1,4 @@
-package com.example.pills.pills.presentation.main
+package com.example.pills.pills.infrastructure.ViewModel
 
 import android.app.Application
 import android.content.Context

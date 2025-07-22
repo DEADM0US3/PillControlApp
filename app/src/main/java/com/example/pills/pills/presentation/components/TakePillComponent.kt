@@ -33,7 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.pills.pills.presentation.calendar.PillViewModel
+import com.example.pills.pills.infrastructure.ViewModel.PillViewModel
 import com.example.pills.pills.presentation.cycle.CycleViewModel
 import com.example.pills.ui.theme.Black
 import com.kizitonwose.calendar.compose.rememberCalendarState

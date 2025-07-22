@@ -1,25 +1,14 @@
 package com.example.pills.pills.domain.repository
 
 import android.util.Log
+import com.example.pills.pills.domain.entities.Friend
+import com.example.pills.pills.domain.entities.User
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 
-@Serializable
-data class Friend(
-    val id: String? = null,
-    val user_id: String,
-    val friend_id: String,
-    val created_at: String? = null
-)
-
-@Serializable
-data class User(
-    val id: String,
-    val name: String? = null,
-)
 
 @Serializable
 data class FriendWithUser(
@@ -72,6 +61,6 @@ class FriendRepository(private val supabaseClient: SupabaseClient) {
                 .decodeSingle<User>()
 
             user.id
-        }
+        } as Result<String>
     }
 }

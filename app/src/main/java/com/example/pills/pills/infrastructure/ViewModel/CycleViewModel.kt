@@ -3,13 +3,13 @@ package com.example.pills.pills.presentation.cycle
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.pills.pills.domain.entities.Cycle
 import com.example.pills.pills.domain.repository.CycleRepository
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.time.LocalDate
@@ -23,16 +23,6 @@ data class CalendarEvent(
     val other: Boolean = false
 )
 
-@Serializable
-data class Cycle(
-    val id: String,
-    val user_id: String,
-    val start_date: String,
-    val pill_count: Int,
-    val end_date: String,
-    val current_day: Int,
-    val is_deleted: Boolean
-)
 
 class CycleViewModel(
 private val cycleRepository: CycleRepository,

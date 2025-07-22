@@ -1,5 +1,6 @@
 package com.example.pills.pills.domain.repository
 
+import com.example.pills.pills.domain.entities.Notification
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
@@ -26,15 +27,41 @@ class NotificationRepository(private val supabaseClient: SupabaseClient) {
             }
         }
 
-    suspend fun getNotifications(receiverId: String): Result<List<Map<String, Any>>> = withContext(Dispatchers.IO) {
+
+    suspend fun getNotifications(receiverId: String): Result<List<Notification>> = withContext(Dispatchers.IO) {
         try {
             val response = supabaseClient.from("notifications").select {
                 filter { eq("receiver_id", receiverId) }
-            }.decodeList<Map<String, Any>>()
+            }.decodeList<Notification>()
 
             Result.success(response)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
+
+    suspend fun getAndDeleteNotificationsForUser(userId: String): Result<List<Notification>> {
+        return runCatching {
+            val notifications = supabaseClient.from("notifications")
+                .select {
+                    filter {
+                        eq("receiver_id", userId)
+                    }
+                }
+                .decodeList<Notification>()
+
+            if (notifications.isNotEmpty()) {
+                supabaseClient.from("notifications")
+                    .delete {
+                        filter {
+                            eq("receiver_id", userId)
+
+                        }
+                    }
+            }
+
+            notifications
+        }
+    }
+
 }

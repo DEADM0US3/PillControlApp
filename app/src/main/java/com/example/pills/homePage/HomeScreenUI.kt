@@ -1,10 +1,8 @@
 package com.example.pills.homePage
 
 
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,12 +22,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Face
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -55,17 +49,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pills.R
 import com.example.pills.pills.domain.repository.FriendWithUser
-import com.example.pills.pills.presentation.calendar.PillViewModel
+import com.example.pills.pills.infrastructure.ViewModel.PillViewModel
 import com.example.pills.pills.presentation.components.TakePillComponent
 import com.example.pills.pills.presentation.cycle.CycleViewModel
-import com.example.pills.pills.presentation.friends.FriendsViewModel
+import com.example.pills.pills.infrastructure.ViewModel.FriendsViewModel
 import com.example.pills.ui.theme.Pink
 import com.example.pills.ui.theme.Black
 import com.example.pills.ui.theme.GrayText
 import com.example.pills.ui.theme.LightGray
 import com.kizitonwose.calendar.compose.rememberCalendarState
 import org.koin.androidx.compose.koinViewModel
-import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.util.Locale

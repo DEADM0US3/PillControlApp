@@ -1,4 +1,4 @@
-package com.example.pills.pills.presentation.friends
+package com.example.pills.pills.infrastructure.ViewModel
 
 import android.util.Log
 import androidx.compose.runtime.getValue
@@ -9,7 +9,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.pills.pills.domain.repository.FriendRepository
 import com.example.pills.pills.domain.repository.FriendWithUser
 import com.example.pills.pills.domain.repository.NotificationRepository
-import com.example.pills.pills.domain.repository.User
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.launch

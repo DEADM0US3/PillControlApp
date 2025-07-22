@@ -1,15 +1,10 @@
 package com.example.pills.pills.domain.repository
 
-import android.util.Log
-import com.example.pills.pills.presentation.cycle.Cycle
+import com.example.pills.pills.domain.entities.Cycle
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-import java.time.LocalDate
-import kotlin.getOrThrow
 
 
 class CycleRepository(private val supabaseClient: SupabaseClient) {

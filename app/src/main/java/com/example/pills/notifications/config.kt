@@ -1,5 +1,6 @@
 package com.example.pills.notifications
 
+import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
@@ -10,19 +11,31 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkerParameters
 import java.util.concurrent.TimeUnit
 import com.example.pills.R
+import com.example.pills.pills.domain.repository.NotificationRepository
+import com.example.pills.pills.domain.supabase.SupabaseClientProvider
 
 class MyPeriodicWorker(
     context: Context,
     workerParams: WorkerParameters
 ) : CoroutineWorker(context, workerParams) {
 
+    private val notificationRepository: NotificationRepository = NotificationRepository(supabaseClient = SupabaseClientProvider.client)
+
+    @SuppressLint("RestrictedApi")
     override suspend fun doWork(): Result {
-        showNotification(
-            "Recordatorio de pastilla",
-            "Es hora de tomar tu pastilla diaria"
-        )
-        return Result.success()
+        val userId = inputData.getString("userId") ?: return Result.failure()
+
+        return when (val result = notificationRepository.getAndDeleteNotificationsForUser(userId)) {
+            is Result.Success -> {
+                result.getOrNull()?.forEach { notification ->
+                    showNotification("Mensaje de ${notification.sender_id}", notification.message)
+                }
+                Result.success()
+            }
+            else -> Result.failure()
+        }
     }
+
 
     private fun showNotification(title: String, message: String) {
         val channelId = "pill_reminder_channel"
@@ -42,7 +55,7 @@ class MyPeriodicWorker(
         val notification = NotificationCompat.Builder(applicationContext, channelId)
             .setContentTitle(title)
             .setContentText(message)
-            .setSmallIcon(android.R.drawable.ic_dialog_info) // Cambia por tu icono
+            .setSmallIcon(android.R.drawable.ic_delete) // Cambia por tu icono
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .build()
 

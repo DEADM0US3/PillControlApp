@@ -1,6 +1,7 @@
 package com.example.pills.pills.domain.repository
 
 import android.util.Log
+import com.example.pills.pills.domain.entities.Pill
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.postgrest
@@ -11,16 +12,6 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
-@Serializable
-data class Pill(
-    val id: String,
-    val cycle_id: String,
-    val user_id: String,
-    val day_taken: String,
-    val status: String,
-    val complications: String? = null,
-    val created_at: String? = null
-)
 
 @Serializable
 data class CreatePill(

@@ -27,8 +27,7 @@ import com.example.pills.pills.domain.repository.FriendWithUser
 import com.example.pills.ui.theme.Black
 import com.example.pills.ui.theme.Pink
 import org.koin.androidx.compose.koinViewModel
-
-import com.example.pills.pills.domain.repository.User
+import com.example.pills.pills.infrastructure.ViewModel.FriendsViewModel
 
 @Composable
 fun FriendScreen(
