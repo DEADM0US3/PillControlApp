@@ -15,8 +15,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -29,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.Black
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -50,7 +53,6 @@ private val PinkLight = Color(0xFFFFF0F6)
 private val LightGray = Color(0xFFF3F3F3)
 private val GrayText = Color(0xFFBDBDBD)
 private val White = Color(0xFFFFFFFF)
-
 
 @Composable
 fun TakePillComponent(
@@ -155,7 +157,6 @@ fun TakePillComponent(
             .padding(20.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            // Icono de reloj
             Box(
                 modifier = Modifier
                     .size(60.dp)
@@ -191,7 +192,6 @@ fun TakePillComponent(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    // Hora con fondo rosa claro
                     Box(
                         modifier = Modifier
                             .background(PinkLight, RoundedCornerShape(12.dp))
@@ -225,7 +225,7 @@ fun TakePillComponent(
                         ),
                         shape = RoundedCornerShape(16.dp),
                         contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
-                        enabled = !isTakenToday && isTimeToTake
+                        enabled = !isTakenToday
                     ) {
                         Text(
                             text = when {
@@ -241,7 +241,6 @@ fun TakePillComponent(
                             fontSize = 12.sp
                         )
                     }
-
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
@@ -256,4 +255,43 @@ fun TakePillComponent(
         }
     }
 
+    if (AlertDialogTake) {
+        AlertDialog(
+            onDismissRequest = { AlertDialogTake = false },
+            confirmButton = {
+                Button(
+                    onClick = { AlertDialogTake = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = Pink),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.padding(8.dp)
+                ) {
+                    Text(
+                        text = "Entendido",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            title = {
+                Text(
+                    text = "¡Toma Registrada! 💊",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF333333)
+                    )
+                )
+            },
+            text = {
+                Text(
+                    text = "La toma de la pastilla se ha guardado exitosamente. ¡Sigue así! 💖",
+                    style = MaterialTheme.typography.bodyMedium.copy(color = Color(0xFF666666))
+                )
+            },
+            containerColor = Color.White,
+            shape = RoundedCornerShape(20.dp),
+            tonalElevation = 6.dp
+        )
+    }
 }
+
+

@@ -188,7 +188,7 @@ fun LoginScreen(
         }
 
         // O si prefieres un texto clickeable en lugar de botón:
-        Spacer(modifier = Modifier.height(8.dp))
+        /*Spacer(modifier = Modifier.height(8.dp))
 
         Text(
             text = "Continuar sin cuenta",
@@ -196,6 +196,6 @@ fun LoginScreen(
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.clickable { navigateToHome() }
-        )
+        )*/
     }
 }

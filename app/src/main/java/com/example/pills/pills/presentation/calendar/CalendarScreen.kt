@@ -41,6 +41,7 @@ import java.util.*
 // Paleta de colores simplificada y estable
 private val Pink = Color(0xFFEA5A8C)
 private val PinkLight = Color(0xFFFFF0F6)
+private val PinkLigth2 = Color(0xFFFF98CD)
 private val PinkDark = Color(0xFFD81B60)
 private val PinkShadow = Color(0x33EA5A8C)
 private val CardShadow = Color(0x22000000)
@@ -163,7 +164,8 @@ fun CalendarScreen(
                     .padding(horizontal = 28.dp, vertical = 12.dp)
             ) {
                 Text(
-                    text = visibleMonth.month.getDisplayName(TextStyle.FULL, Locale.getDefault()).replaceFirstChar { it.uppercase() }.uppercase(),
+                    text = visibleMonth.month.getDisplayName(TextStyle.FULL, Locale.getDefault())
+                        .replaceFirstChar { it.uppercase() }.uppercase(),
                     color = White,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
@@ -189,7 +191,15 @@ fun CalendarScreen(
 
         // Encabezado de días de la semana
         Row(Modifier.fillMaxWidth()) {
-            listOf("Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado").forEach { dayName ->
+            listOf(
+                "Domingo",
+                "Lunes",
+                "Martes",
+                "Miércoles",
+                "Jueves",
+                "Viernes",
+                "Sábado"
+            ).forEach { dayName ->
                 Text(
                     text = dayName.take(3),
                     modifier = Modifier.weight(1f),
@@ -221,10 +231,11 @@ fun CalendarScreen(
                     dayContent = { day ->
                         val isSelected = day.date == selectedDate
                         val isToday = day.date == today
-                        val isInMonth = day.position == com.kizitonwose.calendar.core.DayPosition.MonthDate
+                        val isInMonth =
+                            day.position == com.kizitonwose.calendar.core.DayPosition.MonthDate
                         val dayEvent = calendarEvents[day.date]
-                        
-                        
+
+
                         val cellColor = when {
                             isToday -> Today
                             isSelected -> Pink
@@ -234,7 +245,6 @@ fun CalendarScreen(
                             isInMonth -> PinkLight
                             else -> LightGray.copy(alpha = 0.5f)
                         }
-
 
 
                         // Determinar el color del texto
@@ -357,7 +367,12 @@ fun CalendarScreen(
                                 .background(PinkDark)
                         )
                         Spacer(modifier = Modifier.width(10.dp))
-                        Text("Pastilla tomada", fontSize = 12.sp, color = Black, fontWeight = FontWeight.Medium)
+                        Text(
+                            "Pastilla tomada",
+                            fontSize = 12.sp,
+                            color = Black,
+                            fontWeight = FontWeight.Medium
+                        )
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
@@ -367,7 +382,12 @@ fun CalendarScreen(
                                 .background(Pink, RoundedCornerShape(2.dp))
                         )
                         Spacer(modifier = Modifier.width(10.dp))
-                        Text("Día marcado", fontSize = 12.sp, color = Black, fontWeight = FontWeight.Medium)
+                        Text(
+                            "Día marcado",
+                            fontSize = 12.sp,
+                            color = Black,
+                            fontWeight = FontWeight.Medium
+                        )
                     }
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -379,7 +399,12 @@ fun CalendarScreen(
                                 .background(GrayText)
                         )
                         Spacer(modifier = Modifier.width(10.dp))
-                        Text("Día de descanso", fontSize = 12.sp, color = Black, fontWeight = FontWeight.Medium)
+                        Text(
+                            "Día de descanso",
+                            fontSize = 12.sp,
+                            color = Black,
+                            fontWeight = FontWeight.Medium
+                        )
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
@@ -389,7 +414,12 @@ fun CalendarScreen(
                                 .background(YellowObs)
                         )
                         Spacer(modifier = Modifier.width(10.dp))
-                        Text("Observaciones", fontSize = 12.sp, color = Black, fontWeight = FontWeight.Medium)
+                        Text(
+                            "Observaciones",
+                            fontSize = 12.sp,
+                            color = Black,
+                            fontWeight = FontWeight.Medium
+                        )
                     }
                 }
             }
