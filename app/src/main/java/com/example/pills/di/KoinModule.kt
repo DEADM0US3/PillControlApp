@@ -20,7 +20,7 @@ import com.example.pills.pills.domain.use_case.ValidateAge
 import com.example.pills.pills.presentation.forgetPassword.reset.ResetPasswordViewModel
 import com.example.pills.pills.presentation.forgetPassword.setNew.SetPasswordViewModel
 import com.example.pills.pills.presentation.login.LoginViewModel
-import com.example.pills.pills.presentation.main.MainViewModel
+import com.example.pills.pills.infrastructure.ViewModel.MainViewModel
 import com.example.pills.pills.presentation.otpVerification.OtpViewModel
 import com.example.pills.pills.presentation.signUp.SignUpViewModel
 import com.example.pills.pills.presentation.profile.EditProfileViewModel
@@ -30,9 +30,9 @@ import com.example.pills.pills.domain.repository.CycleRepository
 import com.example.pills.pills.domain.repository.FriendRepository
 import com.example.pills.pills.domain.repository.NotificationRepository
 import com.example.pills.pills.domain.repository.PillRepository
-import com.example.pills.pills.presentation.calendar.PillViewModel
+import com.example.pills.pills.infrastructure.ViewModel.PillViewModel
 import com.example.pills.pills.presentation.cycle.CycleViewModel
-import com.example.pills.pills.presentation.friends.FriendsViewModel
+import com.example.pills.pills.infrastructure.ViewModel.FriendsViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.viewModelOf
@@ -63,7 +63,6 @@ val appModule = module {
     single { PillRepository(get()) }
 
     single { CycleRepository(get()) }
-
 
     // Provide LoginRepository (Now with SupabaseClientProvider)
     single { LoginRepository(androidContext(), get() ) }

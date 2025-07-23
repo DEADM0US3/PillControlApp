@@ -1,4 +1,4 @@
-package com.example.pills.pills.presentation.friends
+package com.example.pills.pills.infrastructure.ViewModel
 
 import android.util.Log
 import androidx.compose.runtime.getValue
@@ -9,7 +9,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.pills.pills.domain.repository.FriendRepository
 import com.example.pills.pills.domain.repository.FriendWithUser
 import com.example.pills.pills.domain.repository.NotificationRepository
-import com.example.pills.pills.domain.repository.User
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.launch
@@ -45,21 +44,13 @@ class FriendsViewModel(
         }
     }
 
-    fun addFriend(friendEmail: String, onSuccess: () -> Unit) {
+    fun addFriend(friendId: String, onSuccess: () -> Unit) {
         viewModelScope.launch {
-            friendRepository.getUserIdByEmail(friendEmail)
-                .onSuccess { friendId ->
-                    val result = friendRepository.addFriend(userId, friendId)
-                    if (result.isSuccess) {
-                        loadFriends()
-                        onSuccess()
-                    } else {
-                        Log.e("FriendsViewModel", "Error adding friend: ${result.exceptionOrNull()}")
-                    }
-                }
-                .onFailure {
-                    Log.e("FriendsViewModel", "Error finding user by email: ${it.message}")
-                }
+            val result = friendRepository.addFriend(userId, friendId)
+            if (result.isSuccess) {
+                loadFriends()
+                onSuccess()
+            }
         }
     }
 

@@ -1,15 +1,12 @@
 package com.example.pills.pills.domain.repository
 
 import android.util.Log
-import com.example.pills.pills.presentation.cycle.Cycle
+import com.example.pills.pills.domain.entities.Cycle
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-import java.time.LocalDate
-import kotlin.getOrThrow
 
 
 class CycleRepository(private val supabaseClient: SupabaseClient) {
@@ -17,26 +14,39 @@ class CycleRepository(private val supabaseClient: SupabaseClient) {
     suspend fun createCycle(
         userId: String,
         startDate: String,
-        pillCount: Int = 21
+        pillCount: Int = 21,
+        takeHour: String? = null
     ): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            supabaseClient.from("cycles").insert(
-                mapOf(
-                    "user_id" to userId,
-                    "start_date" to startDate,
-                    "pill_count" to pillCount
-                )
+            val cycle = Cycle(
+                user_id = userId,
+                start_date = startDate,
+                pill_count = pillCount,
+                take_hour = takeHour
             )
+            Log.d("CycleRepository", "Cycle for creation: $cycle")
+
+            val result =supabaseClient.postgrest
+                .from("cycles")
+                .insert(cycle)
+
+            Log.d("CycleRepository", "Cycle created: $result")
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
+
     suspend fun getActiveCycle(userId: String): Result<Cycle> = withContext(Dispatchers.IO) {
+
+        val today = java.time.LocalDate.now().toString()
+
         try {
             val result = supabaseClient.from("cycles").select {
                 filter {
+                    gt("end_date", today)
                     eq("user_id", userId)
                     eq("is_deleted", false)
                 }

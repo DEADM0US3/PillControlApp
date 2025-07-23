@@ -1,8 +1,8 @@
-package com.example.pills.pills.presentation.calendar
+package com.example.pills.pills.infrastructure.ViewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.pills.pills.domain.repository.Pill
+import com.example.pills.pills.domain.entities.Pill
 import com.example.pills.pills.domain.repository.PillRepository
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
@@ -17,6 +17,7 @@ data class PillUiState(
     val pillsOfMonth: List<Pill> = emptyList(),
     val errorMessage: String? = null,
     val pillOfDay: Pill ? = null,
+    val pillOfToday: Pill ? = null,
     val successMessage: String? = null
 )
 
@@ -49,6 +50,24 @@ class PillViewModel(
         }
     }
 
+    fun loadPillOfToday( date: LocalDate) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null, successMessage = null)
+            val result = repository.getPillByDate(userId, date.toString())
+            _uiState.value = if (result.isSuccess) {
+                _uiState.value.copy(
+                    isLoading = false,
+                    pillOfToday = result.getOrNull(),
+                    errorMessage = null
+                )
+            } else {
+                _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = result.exceptionOrNull()?.message ?: "Error desconocido"
+                )
+            }
+        }
+    }
     fun loadPillOfDay( date: LocalDate) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null, successMessage = null)
