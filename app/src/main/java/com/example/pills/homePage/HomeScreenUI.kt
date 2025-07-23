@@ -300,9 +300,8 @@ fun CycleStatusSection(
     var showDeleteDialog by remember { mutableStateOf(false) }
 
     StatusCard {
-        Column(
-            modifier = Modifier.fillMaxWidth()
-        ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            // Encabezado
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -314,37 +313,40 @@ fun CycleStatusSection(
                     text = "ESTADO DEL CICLO",
                     color = Black,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
+                    fontSize = 18.sp
                 )
 
                 if (cycle != null) {
                     TextButton(
                         onClick = { showDeleteDialog = true },
-                        contentPadding = PaddingValues(4.dp)
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = Color.Red
+                        )
                     ) {
                         Icon(
                             imageVector = Icons.Default.Delete,
-                            contentDescription = null,
+                            contentDescription = "Eliminar",
                             tint = Color.Red,
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "Eliminar",
-                            color = Color.Red,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
             }
 
+            // Estado activo del ciclo
             if (cycle != null) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(PinkLight, RoundedCornerShape(12.dp))
-                        .padding(vertical = 16.dp),
+                        .background(PinkLight, RoundedCornerShape(16.dp))
+                        .padding(vertical = 16.dp, horizontal = 12.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     DateBlock(title = "Inicio", date = startDate)
@@ -352,45 +354,50 @@ fun CycleStatusSection(
                 }
             }
 
+            // Formulario para crear nuevo ciclo
             if (cycle == null) {
                 var pillCountInput by remember { mutableStateOf("21") }
                 var takeHourInput by remember { mutableStateOf("08:00") }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Text(
-                    text = "Cantidad de pastillas",
-                    color = Black,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
-                )
-                OutlinedTextField(
-                    value = pillCountInput,
-                    onValueChange = { pillCountInput = it.filter { c -> c.isDigit() } },
-                    singleLine = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 6.dp),
-                    placeholder = { Text("21") }
-                )
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = "Cantidad de pastillas",
+                        color = Black,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 14.sp
+                    )
+                    OutlinedTextField(
+                        value = pillCountInput,
+                        onValueChange = { pillCountInput = it.filter(Char::isDigit) },
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 6.dp),
+                        placeholder = { Text("21") }
+                    )
 
-                Text(
-                    text = "Hora de toma (HH:mm)",
-                    color = Black,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
-                )
-                OutlinedTextField(
-                    value = takeHourInput,
-                    onValueChange = { takeHourInput = it },
-                    singleLine = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 6.dp),
-                    placeholder = { Text("08:00") }
-                )
+                    Text(
+                        text = "Hora de toma (HH:mm)",
+                        color = Black,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 14.sp
+                    )
+                    OutlinedTextField(
+                        value = takeHourInput,
+                        onValueChange = { takeHourInput = it },
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        placeholder = { Text("08:00") }
+                    )
+                }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 Button(
                     onClick = {
@@ -400,7 +407,7 @@ fun CycleStatusSection(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Pink),
                     shape = RoundedCornerShape(16.dp),
-                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp),
+                    contentPadding = PaddingValues(vertical = 14.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
@@ -412,6 +419,7 @@ fun CycleStatusSection(
                 }
             }
 
+            // Diálogo de confirmación para eliminar
             if (showDeleteDialog) {
                 StyledDeleteDialog(
                     onConfirm = {
@@ -423,7 +431,6 @@ fun CycleStatusSection(
                     }
                 )
             }
-
         }
     }
 }
