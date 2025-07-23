@@ -71,6 +71,8 @@ import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import androidx.compose.foundation.BorderStroke
+
 
 
 private val Pink = Color(0xFFEA5A8C)
@@ -433,52 +435,52 @@ fun StyledDeleteDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = PinkLight, // Fondo rosa claro
-        shape = RoundedCornerShape(20.dp), // Esquinas redondeadas grandes
-        title = {
-            Text(
-                text = "¿Eliminar ciclo?",
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                color = Black
-            )
-        },
-        text = {
-            Text(
-                text = "¿Estás seguro de que deseas eliminar el ciclo actual? Esta acción no se puede deshacer.",
-                fontSize = 14.sp,
-                color = Black
-            )
-        },
         confirmButton = {
             Button(
                 onClick = onConfirm,
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.padding(end = 8.dp)
+                colors = ButtonDefaults.buttonColors(containerColor = Pink),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.padding(8.dp)
             ) {
                 Text(
                     text = "Eliminar",
-                    color = White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
                 )
             }
         },
         dismissButton = {
             OutlinedButton(
                 onClick = onDismiss,
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.padding(start = 8.dp)
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.padding(8.dp),
+                border = BorderStroke(1.dp, Pink)
             ) {
                 Text(
                     text = "Cancelar",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp,
                     color = Pink
                 )
             }
-        }
+        },
+        title = {
+            Text(
+                text = "¿Eliminar ciclo?",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF333333)
+                )
+            )
+        },
+        text = {
+            Text(
+                text = "¿Estás seguro de que deseas eliminar el ciclo actual? Esta acción no se puede deshacer.",
+                style = MaterialTheme.typography.bodyMedium.copy(color = Color(0xFF666666))
+            )
+        },
+        containerColor = Color.White,
+        shape = RoundedCornerShape(20.dp),
+        tonalElevation = 6.dp
     )
 }
 
