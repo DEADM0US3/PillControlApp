@@ -17,6 +17,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -452,7 +453,6 @@ fun PillEditDialog(
     initialMenstruation: Boolean = false,
     initialObservation: Int = 0
 ) {
-
     var hour by remember { mutableStateOf(initialHour) }
     var pillCount by remember { mutableStateOf(initialPillCount.toString()) }
     var menstruation by remember { mutableStateOf(initialMenstruation) }
@@ -460,42 +460,67 @@ fun PillEditDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(16.dp),
+        containerColor = White,
         title = {
             Text(
-                text = "Editar toma del día ${date.dayOfMonth} de ${date.month.getDisplayName(java.time.format.TextStyle.FULL, Locale.getDefault()).replaceFirstChar { it.uppercase() }}",
+                text = "Editar toma del día ${date.dayOfMonth} de ${date.month.getDisplayName(TextStyle.FULL, Locale.getDefault()).replaceFirstChar { it.uppercase() }}",
                 color = Pink,
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp
             )
         },
         text = {
+
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Hora de toma
+                Text("Hora (HH:mm)", color = Pink, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                 OutlinedTextField(
                     value = hour,
+                    label = { Text("Hora de toma", color = Black.copy(alpha = 0.4f)) },
                     onValueChange = { hour = it },
-                    label = { Text("Hora de toma (HH:mm)") },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 6.dp),
+                    colors = TextFieldDefaults.colors(
+                        focusedIndicatorColor = com.example.pills.ui.theme.Pink,
+                        focusedLabelColor = com.example.pills.ui.theme.Pink,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedContainerColor = Color.Transparent,
+
+                        )
                 )
 
                 Spacer(Modifier.height(12.dp))
 
-                Text("Observaciones", fontWeight = FontWeight.Bold, color = Pink)
+                Text("Observaciones", color = Pink, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                 OutlinedTextField(
                     value = observationText,
                     onValueChange = { observationText = it },
+                    shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(100.dp),
-                    placeholder = { Text("Escribe aquí tus observaciones...") },
+                        .height(100.dp)
+                        .padding(vertical = 6.dp),
+                    placeholder = {
+                        Text("Escribe aquí tus observaciones...", color = Black.copy(alpha = 0.4f))
+                    },
+            colors = TextFieldDefaults.colors(
+                focusedIndicatorColor = com.example.pills.ui.theme.Pink,
+                focusedLabelColor = com.example.pills.ui.theme.Pink,
+                unfocusedContainerColor = Color.Transparent,
+                focusedContainerColor = Color.Transparent,
+
+                ),
                     maxLines = 4,
                     singleLine = false
                 )
-
             }
         },
         confirmButton = {
@@ -506,7 +531,7 @@ fun PillEditDialog(
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = Pink),
                 shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.padding(horizontal = 8.dp)
+                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
             ) {
                 Text("Guardar", color = White, fontWeight = FontWeight.Bold)
             }
@@ -514,14 +539,14 @@ fun PillEditDialog(
         dismissButton = {
             Button(
                 onClick = onDismiss,
-                colors = ButtonDefaults.buttonColors(containerColor = White),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Pink),
                 shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.padding(horizontal = 8.dp)
+                border = androidx.compose.foundation.BorderStroke(1.dp, Pink),
+                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp)
             ) {
-                Text("Cancelar", color = Pink, fontWeight = FontWeight.Bold)
+                Text("Cancelar", fontWeight = FontWeight.Bold)
             }
-        },
-        shape = RoundedCornerShape(16.dp),
-        containerColor = White
+        }
     )
 }
+

@@ -72,7 +72,7 @@ import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import androidx.compose.foundation.BorderStroke
-
+import androidx.compose.material3.TextFieldDefaults
 
 
 private val Pink = Color(0xFFEA5A8C)
@@ -310,7 +310,7 @@ fun CycleStatusSection(
 
     StatusCard {
         Column(modifier = Modifier.fillMaxWidth()) {
-            // Encabezado
+            // Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -329,15 +329,13 @@ fun CycleStatusSection(
                     TextButton(
                         onClick = { showDeleteDialog = true },
                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = Color.Red
-                        )
+                        colors = ButtonDefaults.textButtonColors(contentColor = Color.Red)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Eliminar",
                             tint = Color.Red,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
@@ -349,13 +347,13 @@ fun CycleStatusSection(
                 }
             }
 
-            // Estado activo del ciclo
+            // Ciclo actual (si existe)
             if (cycle != null) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(PinkLight, RoundedCornerShape(16.dp))
-                        .padding(vertical = 16.dp, horizontal = 12.dp),
+                        .padding(vertical = 20.dp, horizontal = 16.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     DateBlock(title = "Inicio", date = startDate)
@@ -363,14 +361,15 @@ fun CycleStatusSection(
                 }
             }
 
-            // Formulario para crear nuevo ciclo
+            // Formulario nuevo ciclo
             if (cycle == null) {
                 var pillCountInput by remember { mutableStateOf("21") }
                 var takeHourInput by remember { mutableStateOf("08:00") }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
                 Column(modifier = Modifier.fillMaxWidth()) {
+                    // Campo: Cantidad de pastillas
                     Text(
                         text = "Cantidad de pastillas",
                         color = Black,
@@ -381,13 +380,25 @@ fun CycleStatusSection(
                         value = pillCountInput,
                         onValueChange = { pillCountInput = it.filter(Char::isDigit) },
                         singleLine = true,
+                        label = { Text("Cantidad:", color = Black.copy(alpha = 0.4f)) },
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 6.dp),
-                        placeholder = { Text("21") }
-                    )
+                        placeholder = {
+                            Text("21", color = Black.copy(alpha = 0.4f))
+                        },
+                        colors = TextFieldDefaults.colors(
+                            focusedIndicatorColor = Pink,
+                            focusedLabelColor = Pink,
+                            unfocusedContainerColor = Color.Transparent,
+                            focusedContainerColor = Color.Transparent,
 
+                        )
+                        )
+
+                    // Campo: Hora de toma
+                    Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = "Hora de toma (HH:mm)",
                         color = Black,
@@ -396,18 +407,28 @@ fun CycleStatusSection(
                     )
                     OutlinedTextField(
                         value = takeHourInput,
+                        label = { Text("Hora de Toma:", color = Black.copy(alpha = 0.4f)) },
                         onValueChange = { takeHourInput = it },
                         singleLine = true,
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        placeholder = { Text("08:00") }
+                            .padding(vertical = 6.dp),
+                        placeholder = {
+                            Text("08:00", color = Black.copy(alpha = 0.4f))
+                        },
+
+                        colors = TextFieldDefaults.colors(
+                            focusedIndicatorColor = Color(0xFFD74468),
+                            unfocusedContainerColor = Color.Transparent,
+                            focusedContainerColor = Color.Transparent,
+                            )
                     )
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
+                // Botón de nuevo ciclo
                 Button(
                     onClick = {
                         val pillCount = pillCountInput.toIntOrNull() ?: 21
@@ -435,13 +456,12 @@ fun CycleStatusSection(
                         cycleViewModel.deleteCurrentCycle()
                         showDeleteDialog = false
                     },
-                    onDismiss = {
-                        showDeleteDialog = false
-                    }
+                    onDismiss = { showDeleteDialog = false }
                 )
             }
         }
     }
+
 }
 
 @Composable
