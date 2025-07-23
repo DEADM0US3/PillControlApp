@@ -1,4 +1,4 @@
-package com.example.pills.homePage
+package com.example.pills.pills.presentation.homePage
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize

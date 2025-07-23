@@ -24,7 +24,7 @@ import com.example.pills.pills.infrastructure.ViewModel.MainViewModel
 import com.example.pills.pills.presentation.otpVerification.OtpViewModel
 import com.example.pills.pills.presentation.signUp.SignUpViewModel
 import com.example.pills.pills.presentation.profile.EditProfileViewModel
-import com.example.pills.homePage.HomeViewModel
+import com.example.pills.pills.presentation.homePage.HomeViewModel
 import com.example.pills.pills.configuration.BluetoothViewModel
 import com.example.pills.pills.domain.repository.CycleRepository
 import com.example.pills.pills.domain.repository.FriendRepository

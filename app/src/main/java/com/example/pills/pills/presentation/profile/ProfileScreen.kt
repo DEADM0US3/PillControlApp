@@ -1,11 +1,17 @@
 package com.example.pills.pills.presentation.profile
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,10 +24,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.pills.R
-import com.example.pills.homePage.HomeViewModel
+import com.example.pills.pills.presentation.homePage.HomeViewModel
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
@@ -149,33 +156,68 @@ fun ProfileScreen(
             )
         }
 
-        // Información adicional del usuario
-        if (homeState.userEmail.isNotBlank() || !homeState.userPhone.isNullOrBlank() || !homeState.userAge.isNullOrBlank()) {
+        val context = LocalContext.current
+        val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+
+        if (!homeState.userId.isNullOrBlank()) {
             Spacer(modifier = Modifier.height(16.dp))
+
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.White.copy(alpha = 0.9f)
-                ),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF0F4)), // rosa suave
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
+                Row(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (homeState.userEmail.isNotBlank()) {
-                        UserInfoRow("Email", homeState.userEmail)
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = "ID de usuario",
+                            fontSize = 12.sp,
+                            color = Color.Gray
+                        )
+                        Text(
+                            text = homeState.userId,
+                            fontSize = 14.sp,
+                            color = Color.Black,
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
-                    if (!homeState.userPhone.isNullOrBlank()) {
-                        UserInfoRow("Teléfono", homeState.userPhone ?: "")
-                    }
-                    if (!homeState.userAge.isNullOrBlank()) {
-                        UserInfoRow("Edad", "${homeState.userAge} años")
+
+                    TextButton(
+                        onClick = {
+                            val clip = ClipData.newPlainText("UserID", homeState.userId)
+                            clipboardManager.setPrimaryClip(clip)
+                            Toast.makeText(context, "ID copiado", Toast.LENGTH_SHORT).show()
+                        },
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ContentCopy,
+                            contentDescription = "Copiar ID",
+                            tint = Color(0xFFF48FB1),
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Copiar",
+                            color = Color(0xFFF48FB1),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(24.dp))
         // Opciones
         ProfileOption(text = "Editar perfil", onClick = onEditProfile)
         ProfileOption(text = "Ayuda", onClick = onHelp)

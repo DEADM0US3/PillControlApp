@@ -1,4 +1,4 @@
-package com.example.pills.homePage
+package com.example.pills.pills.presentation.homePage
 
 import com.example.pills.pills.domain.repository.ProfileRepository
 import com.example.pills.R

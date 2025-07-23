@@ -1,17 +1,17 @@
-package com.example.pills.homePage
+package com.example.pills.pills.presentation.homePage
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pills.Logger
 import com.example.pills.R
 import com.example.pills.pills.domain.repository.LoginRepository
-import com.example.pills.pills.domain.repository.ProfileRepository
 import com.example.pills.pills.domain.use_case.GetUserProfile
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.time.Duration
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
@@ -29,7 +29,7 @@ class HomeViewModel(
         updateMascotInfo()
     }
 
-    private fun loadSessionData() {
+    fun loadSessionData() {
         _uiState.value = _uiState.value.copy(isLoading = true)
         viewModelScope.launch {
             try {
@@ -37,7 +37,7 @@ class HomeViewModel(
 
                 // Get the current session from Supabase
                 val session = supabaseClient.auth.currentSessionOrNull()
-                val userId = session?.user?.id ?: ""
+                val userId = supabaseClient.auth.currentUserOrNull()?.id.toString()
                 val access = session?.accessToken ?: "No Access Token"
                 val refresh = session?.refreshToken ?: "No Refresh Token"
 
@@ -84,6 +84,7 @@ class HomeViewModel(
                     val userName = fullNameValue?.toString() ?: userResponse.email ?: "Guest"
 
                     _uiState.value = HomeUiState(
+                        userId = userId, // Añade esto
                         userName = userName,
                         userEmail = userResponse.email ?: "",
                         accessToken = access,
@@ -144,9 +145,9 @@ class HomeViewModel(
 
         // Calcular minutos hasta la toma
         val minutesUntilPill = if (currentTime.isBefore(pillTime)) {
-            java.time.Duration.between(currentTime, pillTime).toMinutes()
+            Duration.between(currentTime, pillTime).toMinutes()
         } else {
-            java.time.Duration.between(currentTime, pillTime.plusHours(24)).toMinutes()
+            Duration.between(currentTime, pillTime.plusHours(24)).toMinutes()
         }
 
         val (imageRes, message) = when {

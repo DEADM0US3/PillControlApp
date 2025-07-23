@@ -1,7 +1,6 @@
-package com.example.pills.homePage
+package com.example.pills.pills.presentation.homePage
 
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -24,7 +23,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Face
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -63,7 +61,6 @@ import com.example.pills.pills.presentation.cycle.CycleViewModel
 import com.example.pills.pills.infrastructure.ViewModel.FriendsViewModel
 import com.example.pills.ui.theme.Pink
 import com.example.pills.ui.theme.Black
-import com.example.pills.ui.theme.GrayText
 import com.example.pills.ui.theme.LightGray
 import com.kizitonwose.calendar.compose.rememberCalendarState
 import org.koin.androidx.compose.koinViewModel
@@ -72,7 +69,7 @@ import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import androidx.compose.foundation.BorderStroke
-
+import java.time.DayOfWeek
 
 
 private val Pink = Color(0xFFEA5A8C)
@@ -101,7 +98,7 @@ fun HomeScreenUI(
         startMonth = startMonth,
         endMonth = endMonth,
         firstVisibleMonth = visibleMonth,
-        firstDayOfWeek = java.time.DayOfWeek.SUNDAY
+        firstDayOfWeek = DayOfWeek.SUNDAY
     )
 
     LaunchedEffect(visibleMonth) {

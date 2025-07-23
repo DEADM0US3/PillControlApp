@@ -7,7 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.pills.homePage.HomeScreen
+import com.example.pills.pills.presentation.homePage.HomeScreen
 import com.example.pills.pills.presentation.forgetPassword.reset.ForgetPasswordScreen
 import com.example.pills.pills.presentation.forgetPassword.setNew.SetPasswordScreen
 import com.example.pills.pills.presentation.login.LoginScreen
@@ -26,8 +26,6 @@ import com.example.pills.pills.presentation.friends.FriendScreen
 import com.example.pills.pills.presentation.profile.ProfileScreen
 import com.example.pills.pills.presentation.profile.EditProfileScreen
 import com.example.pills.pills.presentation.profile.HelpScreen
-import com.example.pills.homePage.HomeViewModel
-import org.koin.androidx.compose.koinViewModel
 
 
 @RequiresPermission(
