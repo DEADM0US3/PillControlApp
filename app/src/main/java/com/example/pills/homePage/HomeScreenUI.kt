@@ -380,6 +380,7 @@ fun CycleStatusSection(
                         value = pillCountInput,
                         onValueChange = { pillCountInput = it.filter(Char::isDigit) },
                         singleLine = true,
+                        label = { Text("Cantidad:", color = Black.copy(alpha = 0.4f)) },
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -406,6 +407,7 @@ fun CycleStatusSection(
                     )
                     OutlinedTextField(
                         value = takeHourInput,
+                        label = { Text("Hora de Toma:", color = Black.copy(alpha = 0.4f)) },
                         onValueChange = { takeHourInput = it },
                         singleLine = true,
                         shape = RoundedCornerShape(12.dp),
@@ -415,6 +417,7 @@ fun CycleStatusSection(
                         placeholder = {
                             Text("08:00", color = Black.copy(alpha = 0.4f))
                         },
+
                         colors = TextFieldDefaults.colors(
                             focusedIndicatorColor = Color(0xFFD74468),
                             unfocusedContainerColor = Color.Transparent,

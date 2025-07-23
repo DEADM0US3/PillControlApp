@@ -471,24 +471,23 @@ fun PillEditDialog(
             )
         },
         text = {
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
-                horizontalAlignment = Alignment.Start
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("Hora de toma (HH:mm)", color = Black, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                Text("Hora (HH:mm)", color = Pink, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                 OutlinedTextField(
                     value = hour,
+                    label = { Text("Hora de toma", color = Black.copy(alpha = 0.4f)) },
                     onValueChange = { hour = it },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 6.dp),
-                    placeholder = {
-                        Text("08:00", color = Black.copy(alpha = 0.4f))
-                    },
                     colors = TextFieldDefaults.colors(
                         focusedIndicatorColor = com.example.pills.ui.theme.Pink,
                         focusedLabelColor = com.example.pills.ui.theme.Pink,
@@ -500,7 +499,7 @@ fun PillEditDialog(
 
                 Spacer(Modifier.height(12.dp))
 
-                Text("Observaciones", color = Black, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                Text("Observaciones", color = Pink, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                 OutlinedTextField(
                     value = observationText,
                     onValueChange = { observationText = it },
