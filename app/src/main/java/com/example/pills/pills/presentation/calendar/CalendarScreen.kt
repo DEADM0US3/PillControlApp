@@ -560,11 +560,13 @@ fun PillEditDialog(
                             pillViewModel.takePill(
                                 cycleId = it.id.toString(),
                                 date = date,
+                                hour_taken = if (hour.isBlank()) null else hour,
                                 status = "taken",
                                 complications = observationText.ifBlank { null }
                             )
                         }
                     }
+                    pillViewModel.loadPillsOfMonth(date.year, date.monthValue)
                     onDismiss()
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = Pink),

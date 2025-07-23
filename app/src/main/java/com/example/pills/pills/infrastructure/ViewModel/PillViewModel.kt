@@ -111,6 +111,7 @@ class PillViewModel(
     fun takePill(
         cycleId: String,
         date: LocalDate,
+        hour_taken: String?,
         status: String,
         complications: String? = null
     ) {
@@ -120,7 +121,7 @@ class PillViewModel(
                 userId,
                 cycleId,
                 date.toString(),
-                date.format(DateTimeFormatter.ofPattern("HH:mm")),
+                hour_taken,
                 status,
                 complications)
             _uiState.value = if (result.isSuccess) {
@@ -129,12 +130,14 @@ class PillViewModel(
                     successMessage = "Pastilla registrada correctamente",
                     errorMessage = null
                 )
+
             } else {
                 _uiState.value.copy(
                     isLoading = false,
                     errorMessage = result.exceptionOrNull()?.message ?: "Error desconocido"
                 )
             }
+            loadPillsOfMonth(date.year, date.monthValue)
         }
     }
 
@@ -159,6 +162,7 @@ class PillViewModel(
                     errorMessage = result.exceptionOrNull()?.message ?: "Error desconocido"
                 )
             }
+
         }
     }
 

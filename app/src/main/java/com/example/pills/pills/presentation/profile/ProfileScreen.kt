@@ -78,6 +78,20 @@ fun ProfileScreen(
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold
             )
+            Button(
+                onClick = {
+                    coroutineScope.launch {
+                        homeViewModel.logout {
+                            navigateToLogin()
+                        }
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF48FB1)),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Cerrar sesión", color = Color.White, fontWeight = FontWeight.Bold)
+            }
         }
     } else {
         Column(

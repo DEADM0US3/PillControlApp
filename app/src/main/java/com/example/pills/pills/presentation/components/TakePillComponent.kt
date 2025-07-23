@@ -42,6 +42,7 @@ import com.kizitonwose.calendar.compose.rememberCalendarState
 import org.koin.androidx.compose.koinViewModel
 import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
@@ -82,7 +83,8 @@ fun TakePillComponent(
         LocalDate.parse(it.day_taken) == today && it.status == "taken"
     } == true
 
-    val now = LocalTime.now()
+    val now = LocalDateTime.now()
+    val hourTake =now.format(DateTimeFormatter.ofPattern("HH:mm"))
 
     val isTimeToTake = cycleState?.getOrNull()?.take_hour?.let { hourStr ->
         try {
@@ -215,7 +217,7 @@ fun TakePillComponent(
                     Button(
                         onClick = {
                             if (!isTakenToday && isTimeToTake) {
-                                pillViewModel.takePill(cycleState?.getOrNull()?.id ?: "", today, "taken", null)
+                                pillViewModel.takePill(cycleState?.getOrNull()?.id ?: "" , today, hourTake.toString(), "taken", null)
                                 AlertDialogTake = true
                             }
                         },
