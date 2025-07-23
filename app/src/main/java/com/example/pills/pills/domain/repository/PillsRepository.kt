@@ -86,6 +86,19 @@ class PillRepository(private val supabaseClient: SupabaseClient) {
             }
         }
 
+    suspend fun getPillsInACycle(userId: String, cycle_id: String): Result<List<Pill>> =
+        withContext(Dispatchers.IO) {
+            Result.runCatching {
+                supabaseClient.from("pills").select {
+                    filter {
+                        eq("user_id", userId)
+                        eq("cycle_id", cycle_id)
+                    }
+                }.decodeList()
+            }
+        }
+
+
     suspend fun getPillsInMonth(userId: String, year: Int, month: Int): Result<List<Pill>> =
         withContext(Dispatchers.IO) {
             Result.runCatching {

@@ -31,7 +31,6 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
-import com.example.pills.notifications.NotificationWorker
 import com.example.pills.pills.navigation.AuthNavigation
 import com.example.pills.pills.infrastructure.ViewModel.MainViewModel
 import com.example.pills.ui.theme.AuthTheme
@@ -50,7 +49,6 @@ class MainActivity : ComponentActivity() {
         ]
     )
     override fun onCreate(savedInstanceState: Bundle?) {
-        setupPeriodicWork()
         super.onCreate(savedInstanceState)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -78,25 +76,10 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun setupPeriodicWork() {
-        val workRequest = PeriodicWorkRequestBuilder<NotificationWorker>(
-            15, TimeUnit.MINUTES
-        ).build()
 
-
-        WorkManager.getInstance(this)
-            .enqueueUniquePeriodicWork(
-                "MyPeriodicWork",
-                ExistingPeriodicWorkPolicy.KEEP,
-                workRequest
-            )
-    }
 
 
 }
-
-
-
 
 @Composable
 fun LoadingScreen() {

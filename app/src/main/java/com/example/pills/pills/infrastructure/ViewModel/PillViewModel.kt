@@ -18,6 +18,7 @@ data class PillUiState(
     val errorMessage: String? = null,
     val pillOfDay: Pill ? = null,
     val pillOfToday: Pill ? = null,
+    val pillsOfCycle: List<Pill> = emptyList(),
     val successMessage: String? = null
 )
 
@@ -31,14 +32,14 @@ class PillViewModel(
 
     private val userId = client.auth.currentUserOrNull()?.id.toString();
 
-    fun loadPillsOfCycle( year: Int, month: Int) {
+    fun loadPillsOfCycle(cycle_id: String) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null, successMessage = null)
-            val result = repository.getPillsInMonth(userId, year, month)
+            val result = repository.getPillsInACycle(userId, cycle_id)
             _uiState.value = if (result.isSuccess) {
                 _uiState.value.copy(
                     isLoading = false,
-                    pillsOfMonth = result.getOrDefault(emptyList()),
+                    pillsOfCycle = result.getOrDefault(emptyList()),
                     errorMessage = null
                 )
             } else {

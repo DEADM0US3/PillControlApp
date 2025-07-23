@@ -184,7 +184,7 @@ fun ProtectionStatusSection(
     val pillsState by pillViewModel.uiState.collectAsState()
 
     val cycle = cycleState?.getOrNull()
-    val pillsOfMonth = pillsState?.pillsOfMonth ?: emptyList()
+    val pillsOfMonth = pillsState?.pillsOfCycle ?: emptyList()
 
     // Total pastillas del ciclo o 0 si no hay
     val totalPills = cycle?.pill_count ?: 0
@@ -197,6 +197,15 @@ fun ProtectionStatusSection(
         takenPillsCount.toFloat() / totalPills.toFloat()
     } else 0f
 
+    LaunchedEffect(Unit) {
+        cycleViewModel.fetchActiveCycle()
+    }
+
+    LaunchedEffect(cycle?.id) {
+        pillViewModel.loadPillsOfCycle(
+            cycle?.id.toString()
+        )
+    }
 
     Box(
         modifier = Modifier
