@@ -104,9 +104,8 @@ class EditProfileViewModel(
             result.onSuccess { user ->
                 _state.update {
                     it.copy(
-                        name = user.fullName ?: "",
+                        name = user.name ?: "",
                         email = user.email,
-                        imageUrl = user.profileImageUrl ?: "",
                         isLoading = false
                     )
                 }

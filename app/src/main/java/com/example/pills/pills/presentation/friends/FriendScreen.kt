@@ -163,7 +163,7 @@ fun FriendItem(user: FriendWithCycleInfo, onRemind: () -> Unit) {
     val now = remember { LocalTime.now() }
 
     // Calcular si está dentro de la ventana de 30 minutos
-    val isTimeToTake = takeHour?.let { hourStr ->
+    val isTimeToRemind = takeHour?.let { hourStr ->
         try {
             val takeTime = LocalTime.parse(hourStr, DateTimeFormatter.ofPattern("HH:mm:ss"))
             val now = LocalTime.now()

@@ -26,10 +26,9 @@ class ProfileRepository(
     data class UserProfileDto(
         val id: String,
         val email: String,
-        val full_name: String? = null,
+        val name: String? = null,
         val phone: String? = null,
         val age: String? = null,
-        val profile_image_url: String? = null,
         val created_at: String? = null,
         val updated_at: String? = null
     )
@@ -38,10 +37,9 @@ class ProfileRepository(
     data class UserProfile(
         val id: String,
         val email: String,
-        val fullName: String?,
+        val name: String?,
         val phone: String?,
         val age: String?,
-        val profileImageUrl: String?,
         val createdAt: String?,
         val updatedAt: String?
     )
@@ -54,7 +52,7 @@ class ProfileRepository(
             val profile = supabaseClient
                 .from("users")
                 .select(
-                    Columns.list("id", "email", "full_name", "phone", "age", "profile_image_url", "created_at", "updated_at")
+                    Columns.list("id", "email", "name", "created_at", "updated_at")
                 ) {
                     filter { eq("id", user.id) }
                 }
@@ -65,10 +63,9 @@ class ProfileRepository(
                 UserProfile(
                     id = profile.id,
                     email = profile.email,
-                    fullName = profile.full_name,
+                    name = profile.name,
                     phone = profile.phone,
                     age = profile.age,
-                    profileImageUrl = profile.profile_image_url,
                     createdAt = profile.created_at,
                     updatedAt = profile.updated_at
                 )
@@ -95,14 +92,14 @@ class ProfileRepository(
             supabaseClient.auth.updateUser {
                 this.email = email
                 this.data = buildJsonObject {
-                    put("full_name", fullName)
+                    put("name", fullName)
                 }
             }
 
             // 🔄 Actualizar en tabla "users"
             supabaseClient.from("users").update(
                 mapOf(
-                    "full_name" to fullName,
+                    "name" to fullName,
                     "email" to email
                 )
             ) {

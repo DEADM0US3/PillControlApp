@@ -51,11 +51,10 @@ class HomeViewModel(
                     userProfile?.let { profile ->
                         _uiState.value = HomeUiState(
                             userId = userId, // Añade esto a tu HomeUiState
-                            userName = profile.fullName ?: "Guest",
+                            userName = profile.name ?: "Guest",
                             userEmail = profile.email,
                             userPhone = profile.phone,
                             userAge = profile.age,
-                            profileImageUrl = profile.profileImageUrl,
                             accessToken = access,
                             refreshToken = refresh,
                             errorMessage = null,
