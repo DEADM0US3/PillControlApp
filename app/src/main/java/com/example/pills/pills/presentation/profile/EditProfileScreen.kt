@@ -117,6 +117,7 @@ fun EditProfileScreen(
             } catch (e: Exception) {
                 // Manejar error de callback de forma segura
             }
+        showSuccessAnimation = false
         }
     }
 
@@ -225,7 +226,7 @@ fun EditProfileScreen(
             exit = fadeOut() + scaleOut(),
             modifier = Modifier.fillMaxSize()
         ) {
-            SuccessOverlay(onDismiss = { showSuccessAnimation = false })
+            SuccessOverlay( )
         }
     }
 
@@ -236,7 +237,7 @@ fun EditProfileScreen(
                 viewModel.onEvent(EditProfileEvent.SaveProfile)
                 showSaveDialog = false
             },
-            onDismiss = { showSaveDialog = false }
+            onDismiss = { }
         )
     }
 }
@@ -716,7 +717,7 @@ fun ModernConfirmationDialog(
 }
 
 @Composable
-fun SuccessOverlay(onDismiss: () -> Unit) {
+fun SuccessOverlay() {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -779,15 +780,6 @@ fun SuccessOverlay(onDismiss: () -> Unit) {
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Button(
-                    onClick = { onDismiss() },
-                    colors = ButtonDefaults.buttonColors(containerColor = ProfileColors.primary)
-                ) {
-                    Text("Cerrar", color = Color.White)
-                }
             }
         }
     }
