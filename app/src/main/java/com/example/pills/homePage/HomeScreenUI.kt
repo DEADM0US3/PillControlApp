@@ -365,6 +365,9 @@ fun CycleStatusSection(
             if (cycle == null) {
                 var pillCountInput by remember { mutableStateOf("21") }
                 var takeHourInput by remember { mutableStateOf("08:00") }
+                var expanded by remember { mutableStateOf(false) }
+                val options = listOf("21", "27")
+                var selectedOption by remember { mutableStateOf("21") }
 
                 Spacer(modifier = Modifier.height(20.dp))
 
@@ -393,9 +396,8 @@ fun CycleStatusSection(
                             focusedLabelColor = Pink,
                             unfocusedContainerColor = Color.Transparent,
                             focusedContainerColor = Color.Transparent,
-
-                        )
-                        )
+                            ),
+                    )
 
                     // Campo: Hora de toma
                     Spacer(modifier = Modifier.height(12.dp))
@@ -461,7 +463,6 @@ fun CycleStatusSection(
             }
         }
     }
-
 }
 
 @Composable
