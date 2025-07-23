@@ -71,6 +71,8 @@ import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import androidx.compose.foundation.BorderStroke
+
 
 
 private val Pink = Color(0xFFEA5A8C)
@@ -307,9 +309,8 @@ fun CycleStatusSection(
     var showDeleteDialog by remember { mutableStateOf(false) }
 
     StatusCard {
-        Column(
-            modifier = Modifier.fillMaxWidth()
-        ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            // Encabezado
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -321,37 +322,40 @@ fun CycleStatusSection(
                     text = "ESTADO DEL CICLO",
                     color = Black,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
+                    fontSize = 18.sp
                 )
 
                 if (cycle != null) {
                     TextButton(
                         onClick = { showDeleteDialog = true },
-                        contentPadding = PaddingValues(4.dp)
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = Color.Red
+                        )
                     ) {
                         Icon(
                             imageVector = Icons.Default.Delete,
-                            contentDescription = null,
+                            contentDescription = "Eliminar",
                             tint = Color.Red,
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "Eliminar",
-                            color = Color.Red,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
             }
 
+            // Estado activo del ciclo
             if (cycle != null) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(PinkLight, RoundedCornerShape(12.dp))
-                        .padding(vertical = 16.dp),
+                        .background(PinkLight, RoundedCornerShape(16.dp))
+                        .padding(vertical = 16.dp, horizontal = 12.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     DateBlock(title = "Inicio", date = startDate)
@@ -359,45 +363,50 @@ fun CycleStatusSection(
                 }
             }
 
+            // Formulario para crear nuevo ciclo
             if (cycle == null) {
                 var pillCountInput by remember { mutableStateOf("21") }
                 var takeHourInput by remember { mutableStateOf("08:00") }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Text(
-                    text = "Cantidad de pastillas",
-                    color = Black,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
-                )
-                OutlinedTextField(
-                    value = pillCountInput,
-                    onValueChange = { pillCountInput = it.filter { c -> c.isDigit() } },
-                    singleLine = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 6.dp),
-                    placeholder = { Text("21") }
-                )
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = "Cantidad de pastillas",
+                        color = Black,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 14.sp
+                    )
+                    OutlinedTextField(
+                        value = pillCountInput,
+                        onValueChange = { pillCountInput = it.filter(Char::isDigit) },
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 6.dp),
+                        placeholder = { Text("21") }
+                    )
 
-                Text(
-                    text = "Hora de toma (HH:mm)",
-                    color = Black,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
-                )
-                OutlinedTextField(
-                    value = takeHourInput,
-                    onValueChange = { takeHourInput = it },
-                    singleLine = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 6.dp),
-                    placeholder = { Text("08:00") }
-                )
+                    Text(
+                        text = "Hora de toma (HH:mm)",
+                        color = Black,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 14.sp
+                    )
+                    OutlinedTextField(
+                        value = takeHourInput,
+                        onValueChange = { takeHourInput = it },
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        placeholder = { Text("08:00") }
+                    )
+                }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 Button(
                     onClick = {
@@ -407,7 +416,7 @@ fun CycleStatusSection(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Pink),
                     shape = RoundedCornerShape(16.dp),
-                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp),
+                    contentPadding = PaddingValues(vertical = 14.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
@@ -419,6 +428,7 @@ fun CycleStatusSection(
                 }
             }
 
+            // Diálogo de confirmación para eliminar
             if (showDeleteDialog) {
                 StyledDeleteDialog(
                     onConfirm = {
@@ -430,7 +440,6 @@ fun CycleStatusSection(
                     }
                 )
             }
-
         }
     }
 }
@@ -442,52 +451,52 @@ fun StyledDeleteDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = PinkLight, // Fondo rosa claro
-        shape = RoundedCornerShape(20.dp), // Esquinas redondeadas grandes
-        title = {
-            Text(
-                text = "¿Eliminar ciclo?",
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                color = Black
-            )
-        },
-        text = {
-            Text(
-                text = "¿Estás seguro de que deseas eliminar el ciclo actual? Esta acción no se puede deshacer.",
-                fontSize = 14.sp,
-                color = Black
-            )
-        },
         confirmButton = {
             Button(
                 onClick = onConfirm,
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.padding(end = 8.dp)
+                colors = ButtonDefaults.buttonColors(containerColor = Pink),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.padding(8.dp)
             ) {
                 Text(
                     text = "Eliminar",
-                    color = White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
                 )
             }
         },
         dismissButton = {
             OutlinedButton(
                 onClick = onDismiss,
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.padding(start = 8.dp)
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.padding(8.dp),
+                border = BorderStroke(1.dp, Pink)
             ) {
                 Text(
                     text = "Cancelar",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp,
                     color = Pink
                 )
             }
-        }
+        },
+        title = {
+            Text(
+                text = "¿Eliminar ciclo?",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF333333)
+                )
+            )
+        },
+        text = {
+            Text(
+                text = "¿Estás seguro de que deseas eliminar el ciclo actual? Esta acción no se puede deshacer.",
+                style = MaterialTheme.typography.bodyMedium.copy(color = Color(0xFF666666))
+            )
+        },
+        containerColor = Color.White,
+        shape = RoundedCornerShape(20.dp),
+        tonalElevation = 6.dp
     )
 }
 
