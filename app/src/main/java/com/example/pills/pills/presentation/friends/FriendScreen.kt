@@ -28,6 +28,7 @@ import com.example.pills.ui.theme.Black
 import com.example.pills.ui.theme.Pink
 import org.koin.androidx.compose.koinViewModel
 import com.example.pills.pills.infrastructure.ViewModel.FriendsViewModel
+import androidx.compose.ui.text.style.TextAlign
 
 @Composable
 fun FriendScreen(
@@ -193,34 +194,81 @@ fun AddFriendDialog(
 ) {
     var friendName by remember { mutableStateOf("") }
 
+    val Pink = Color(0xFFEA5A8C)
+    val PinkLight = Color(0xFFFFF0F6)
+    val GrayText = Color(0xFFBDBDBD)
+    val White = Color(0xFFFFFFFF)
+
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
-            TextButton(
+            Button(
                 onClick = {
                     if (friendName.isNotBlank()) {
                         onAddFriend(friendName.trim())
                     }
-                }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Pink),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.padding(8.dp)
             ) {
-                Text("Agregar")
+                Text(
+                    text = "Agregar",
+                    color = White,
+                    fontWeight = FontWeight.Bold
+                )
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancelar")
+            Button(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(containerColor = White),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.padding(8.dp)
+            ) {
+                Text(
+                    text = "Cancelar",
+                    color = Pink,
+                    fontWeight = FontWeight.Bold
+                )
             }
         },
         title = {
-            Text("Agregar nueva amiga")
+            Text(
+                text = "Agregar nueva amiga 💕",
+                fontWeight = FontWeight.Bold,
+                color = Pink,
+                fontSize = 20.sp,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
         },
         text = {
-            OutlinedTextField(
-                value = friendName,
-                onValueChange = { friendName = it },
-                label = { Text("ID o correo de la amiga") },
-                singleLine = true
-            )
-        }
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                OutlinedTextField(
+                    value = friendName,
+                    onValueChange = { friendName = it },
+                    label = { Text("ID o correo de la amiga") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Conéctate con tus personas favoritas y cuídense juntas 💖",
+                    fontSize = 13.sp,
+                    color = GrayText,
+                    textAlign = TextAlign.Center
+                )
+            }
+        },
+        containerColor = White,
+        shape = RoundedCornerShape(20.dp),
+        tonalElevation = 6.dp
     )
 }

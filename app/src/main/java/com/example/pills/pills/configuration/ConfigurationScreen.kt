@@ -13,8 +13,8 @@ import androidx.annotation.RequiresPermission
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -27,10 +27,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -42,12 +48,11 @@ private val accentColor = Color(0xFFFF6B9D)
 private val errorBackground = Color(0xFFFF5252).copy(alpha = 0.1f)
 private val errorTextColor = Color(0xFFFF5252)
 
-
 @RequiresApi(Build.VERSION_CODES.S)
 @RequiresPermission(
     allOf = [
-        android.Manifest.permission.BLUETOOTH_SCAN,
-        android.Manifest.permission.BLUETOOTH_CONNECT
+        Manifest.permission.BLUETOOTH_SCAN,
+        Manifest.permission.BLUETOOTH_CONNECT
     ]
 )
 @Composable
@@ -56,50 +61,29 @@ fun ConfigurationScreen(
     viewModel: BluetoothViewModel = koinViewModel()
 ) {
     val context = LocalContext.current
-
     val connectionState by viewModel.connectionState.collectAsState()
-
     var permissionsGranted by remember { mutableStateOf(false) }
-
     val devices = remember { mutableStateListOf<BluetoothDevice>() }
 
     val permissionsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissionsMap ->
         permissionsGranted = permissionsMap.entries.all { it.value }
-        if (!permissionsGranted) {
-            Log.w("ConfigurationScreen", "Permisos BLE no otorgados")
-        } else {
-            viewModel.startScan(devices)
-        }
+        if (permissionsGranted) viewModel.startScan(devices)
+        else Log.w("ConfigScreen", "Permisos BLE no otorgados")
     }
 
     LaunchedEffect(Unit) {
         permissionsGranted = checkBlePermissions(context)
-        Log.d("ConfigurationScreen", "Permisos otorgados: $permissionsGranted")
-
-        if (permissionsGranted) {
-            Log.d("ConfigurationScreen", "Iniciando escaneo de dispositivos...")
-            viewModel.startScan(devices)
-        } else {
-            Log.d("ConfigurationScreen", "Solicitando permisos...")
-            permissionsLauncher.launch(
-                arrayOf(
-                    Manifest.permission.BLUETOOTH_SCAN,
-                    Manifest.permission.BLUETOOTH_CONNECT,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                )
+        if (permissionsGranted) viewModel.startScan(devices)
+        else permissionsLauncher.launch(
+            arrayOf(
+                Manifest.permission.BLUETOOTH_SCAN,
+                Manifest.permission.BLUETOOTH_CONNECT,
+                Manifest.permission.ACCESS_FINE_LOCATION
             )
-        }
+        )
     }
-
-    LaunchedEffect(devices.size) {
-        Log.d("ConfigurationScreen", "Dispositivos actuales (${devices.size}):")
-        devices.forEach {
-            Log.d("ConfigurationScreen", " - ${it.name} - ${it.address}")
-        }
-    }
-
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -108,16 +92,15 @@ fun ConfigurationScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(primaryGradientColors)
-                )
+                .background(Brush.verticalGradient(primaryGradientColors))
                 .padding(16.dp)
         ) {
-
             ModernHeader(onBackPressed)
 
+            Spacer(Modifier.height(24.dp))
+
             Text(
-                "Dispositivos Encontrados",
+                text = "Dispositivos Encontrados",
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.Bold,
                     color = Color.White
@@ -149,43 +132,84 @@ fun ConfigurationScreen(
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {
-                Text(
-                    "Escaneando dispositivos...",
-                    style = MaterialTheme.typography.bodyMedium.copy(color = Color.White),
-                    modifier = Modifier.padding(vertical = 16.dp)
-                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    LoadingPill()
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        "Escaneando dispositivos...",
+                        style = MaterialTheme.typography.bodyMedium.copy(color = Color.White)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-                Text("Estado: $connectionState", style = MaterialTheme.typography.bodyMedium)
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    "Estado: $connectionState",
+                    style = MaterialTheme.typography.bodyMedium.copy(color = Color.White)
+                )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 LazyColumn(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(bottom = 16.dp)
                 ) {
                     itemsIndexed(devices) { _, device ->
-                        DeviceItem(device = device, onConnectClick = {
-                            viewModel.connectToDevice(it)
-                        })
+                        PillDeviceItem(device = device, onConnectClick = { viewModel.connectToDevice(it) })
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Recuerda tomar tu pastilla a tiempo 💊",
+                    color = accentColor.copy(alpha = 0.9f),
+                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Controla tu ciclo y mantén el ritmo perfecto con tu pastilla diaria.",
+                color = Color.White.copy(alpha = 0.7f),
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp, vertical = 8.dp)
+            )
         }
     }
 }
-
 
 @Composable
 fun ModernHeader(onBackPressed: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp) // Padding más equilibrado
-            .statusBarsPadding(), // Asegura que no se superponga con la barra de estado
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .statusBarsPadding(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color.White.copy(alpha = 0.15f)
@@ -194,7 +218,7 @@ fun ModernHeader(onBackPressed: () -> Unit) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp), // Padding interno consistente
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(
@@ -231,48 +255,120 @@ fun ModernHeader(onBackPressed: () -> Unit) {
     ]
 )
 @Composable
-fun DeviceItem(device: BluetoothDevice, onConnectClick: (BluetoothDevice) -> Unit = {}) {
+fun PillDeviceItem(device: BluetoothDevice, onConnectClick: (BluetoothDevice) -> Unit = {}) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .shadow(6.dp, RoundedCornerShape(16.dp)),
+            .height(70.dp)
+            .shadow(4.dp, RoundedCornerShape(16.dp)),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.85f))
+        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.95f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         Row(
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .fillMaxSize()
+                .padding(horizontal = 20.dp)
         ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp, 40.dp)
+                    .shadow(2.dp, RoundedCornerShape(20.dp))
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(accentColor, Color.White)
+                        ),
+                        shape = RoundedCornerShape(20.dp)
+                    )
+            )
+
+            Spacer(modifier = Modifier.width(16.dp))
+
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = device.name ?: "Unknown",
-                    fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color.Black
+                    text = device.name ?: "Dispositivo desconocido",
+                    fontWeight = FontWeight.Medium,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color(0xFF5A3E47)
                 )
                 Text(
                     text = device.address,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.DarkGray
+                    color = Color(0xFF957D85)
                 )
             }
+
             Button(
                 onClick = { onConnectClick(device) },
-                shape = RoundedCornerShape(24.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFF48FB1) // color rosa suave
-                ),
-                modifier = Modifier.height(36.dp)
+                shape = RoundedCornerShape(20.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = accentColor),
+                modifier = Modifier.height(36.dp).width(100.dp),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 6.dp)
             ) {
                 Text(
                     text = "Conectar",
                     color = Color.White,
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Medium,
+                    style = MaterialTheme.typography.labelLarge
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun LoadingPill(modifier: Modifier = Modifier) {
+    val infiniteTransition = rememberInfiniteTransition()
+    val rotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1500, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        )
+    )
+
+    androidx.compose.foundation.Canvas(
+        modifier = modifier
+            .size(60.dp)
+            .padding(4.dp)
+    ) {
+        withTransform({
+            rotate(rotation, pivot = center)
+        }) {
+            val pillWidth = size.width
+            val pillHeight = size.height * 0.6f
+            val pillRect = Rect(
+                left = 0f,
+                top = (size.height - pillHeight) / 2,
+                right = pillWidth,
+                bottom = (size.height + pillHeight) / 2
+            )
+            // Mitad izquierda rosa fuerte
+            drawRoundRect(
+                color = accentColor,
+                topLeft = pillRect.topLeft,
+                size = pillRect.size.copy(width = pillRect.width / 2, height = pillRect.height),
+                cornerRadius = CornerRadius(pillHeight / 2, pillHeight / 2),
+                style = Fill
+            )
+            // Mitad derecha blanco
+            drawRoundRect(
+                color = Color.White,
+                topLeft = pillRect.topLeft.copy(x = pillRect.left + pillRect.width / 2),
+                size = pillRect.size.copy(width = pillRect.width / 2, height = pillRect.height),
+                cornerRadius = CornerRadius(pillHeight / 2, pillHeight / 2),
+                style = Stroke(width = 2f)
+            )
+            // Borde negro sutil
+            drawRoundRect(
+                color = Color.Black.copy(alpha = 0.1f),
+                topLeft = pillRect.topLeft,
+                size = pillRect.size,
+                cornerRadius = CornerRadius(pillHeight / 2, pillHeight / 2),
+                style = Stroke(width = 2f)
+            )
         }
     }
 }
