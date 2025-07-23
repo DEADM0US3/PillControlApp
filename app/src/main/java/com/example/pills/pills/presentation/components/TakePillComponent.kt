@@ -53,6 +53,7 @@ private val PinkLight = Color(0xFFFFF0F6)
 private val LightGray = Color(0xFFF3F3F3)
 private val GrayText = Color(0xFFBDBDBD)
 private val White = Color(0xFFFFFFFF)
+// private val Black = Color(0xFF222222)
 
 @Composable
 fun TakePillComponent(
@@ -147,6 +148,9 @@ fun TakePillComponent(
             "Hora de toma no disponible"
         }
     } ?: "Hora de toma no disponible"
+
+    var AlertDialogTake by remember { mutableStateOf(false) }
+    val Pink = Color(0xFFE91E63) // O tu tono exacto
 
 
     Box(
