@@ -225,7 +225,7 @@ fun EditProfileScreen(
             exit = fadeOut() + scaleOut(),
             modifier = Modifier.fillMaxSize()
         ) {
-            SuccessOverlay()
+            SuccessOverlay(onDismiss = { showSuccessAnimation = false })
         }
     }
 
@@ -716,7 +716,7 @@ fun ModernConfirmationDialog(
 }
 
 @Composable
-fun SuccessOverlay() {
+fun SuccessOverlay(onDismiss: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -729,11 +729,11 @@ fun SuccessOverlay() {
                 containerColor = Color.White
             ),
             modifier = Modifier
-                .size(200.dp)
+                .size(280.dp)
                 .shadow(16.dp, RoundedCornerShape(32.dp))
         ) {
             Column(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
@@ -779,6 +779,15 @@ fun SuccessOverlay() {
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Button(
+                    onClick = { onDismiss() },
+                    colors = ButtonDefaults.buttonColors(containerColor = ProfileColors.primary)
+                ) {
+                    Text("Cerrar", color = Color.White)
+                }
             }
         }
     }
