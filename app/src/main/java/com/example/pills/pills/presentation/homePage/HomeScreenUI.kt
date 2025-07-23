@@ -77,6 +77,8 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import java.time.DayOfWeek
 import androidx.compose.material3.TextFieldDefaults
+import androidx.wear.compose.material.ScalingLazyColumn
+import androidx.wear.compose.material.rememberScalingLazyListState
 import com.example.pills.pills.domain.repository.FriendWithCycleInfo
 import com.example.pills.pills.presentation.loading.LoadingScreen
 import kotlinx.coroutines.delay
@@ -95,80 +97,38 @@ private val Black = Color(0xFF000000) // para que sea explícito
 
 @Composable
 fun HomeScreenUI(
-    navigateToFriends : () -> Unit,
     cycleViewModel: CycleViewModel = koinViewModel(),
-    pillViewModel: PillViewModel = koinViewModel(),
-    friendsViewModel: FriendsViewModel = koinViewModel() // <-- ViewModel con lógica de amigas
+    pillViewModel: PillViewModel = koinViewModel()
 ) {
+    val context = LocalContext.current
+    val today = LocalDate.now()
 
-    val friends = friendsViewModel.friends
+    val pillState by pillViewModel.uiState.collectAsState()
+    val cycleState by cycleViewModel.cycleState.collectAsState()
 
-    val startMonth = remember { YearMonth.now().minusMonths(12) }
-    val endMonth = remember { YearMonth.now().plusMonths(12) }
-    var visibleMonth by remember { mutableStateOf(YearMonth.now()) }
+    val listState = rememberScalingLazyListState()
 
-    val calendarState = rememberCalendarState(
-        startMonth = startMonth,
-        endMonth = endMonth,
-        firstVisibleMonth = visibleMonth,
-        firstDayOfWeek = DayOfWeek.SUNDAY
-    )
-
-
-    LaunchedEffect(visibleMonth) {
+    LaunchedEffect(Unit) {
         cycleViewModel.fetchActiveCycle()
-        pillViewModel.loadPillsOfMonth(visibleMonth.year, visibleMonth.monthValue)
-        calendarState.scrollToMonth(visibleMonth)
-
-    }
-    LaunchedEffect(Unit) {
-        friendsViewModel.loadFriends()
+        pillViewModel.loadPillOfToday(today)
     }
 
-
-    var isLoading by remember { mutableStateOf(true) }
-
-    LaunchedEffect(Unit) {
-        delay(400)
-        isLoading = false
-    }
-    if (isLoading){
-        return LoadingScreen()
-
-    }
-
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFFF48FB1), // Mismo color que ProfileScreen y CalendarScreen
-                        Color(0xFFFCE4EC)  // Mismo color que ProfileScreen y CalendarScreen
-                    )
-                )
-            ),
-        contentAlignment = Alignment.Center
+    ScalingLazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        state = listState,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        contentPadding = PaddingValues(8.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            HeaderSection()
-            ProtectionStatusSection()
+        item {
             MascotReminderSection()
-            CycleStatusSection()
-            Spacer(Modifier.height(8.dp))
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(6.dp))
+        }
+
+        item {
             TakePillComponent()
-            FriendsListSectionHome(
-                friends = friends,
-                onRemindClick = { friend -> friendsViewModel.sendReminder(friend.friend_id) },
-                navigateToFriends = navigateToFriends
-            )
         }
     }
 }
@@ -268,43 +228,28 @@ fun ProtectionStatusSection(
 
 
 @Composable
-fun MascotReminderSection(
-    homeViewModel: HomeViewModel = koinViewModel()
+fun MascotReminderSection(    homeViewModel: HomeViewModel = koinViewModel()
 ) {
     val uiState by homeViewModel.uiState.collectAsState()
 
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(10.dp),
-        contentAlignment = Alignment.Center
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.padding(8.dp)
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = uiState.mascotMessage,
-                color = Pink,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-                fontSize = 16.sp
-            )
-            Spacer(Modifier.height(5.dp))
-            Box(
-                /*modifier = Modifier
-                    .size(190.dp)
-                    .clip(CircleShape)
-                    .background(LightGray.copy(alpha = 0.3f))
-                    .padding(8.dp), */
-                modifier = Modifier.offset(y = (-40).dp), // Sube el icono 10dp
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    painter = painterResource(id = uiState.mascotImageRes),
-                    contentDescription = "Mascota",
-                    modifier = Modifier.size(250.dp),
-                    tint = Color.Unspecified
-                )
-            }
-        }
+        Text(
+            text = uiState.mascotMessage,
+            fontSize = 14.sp,
+            color = Pink,
+            textAlign = TextAlign.Center,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(Modifier.height(4.dp))
+        Icon(
+            painter = painterResource(id = uiState.mascotImageRes),
+            contentDescription = null,
+            modifier = Modifier.size(80.dp), // reducido para Wear
+            tint = Color.Unspecified
+        )
     }
 }
 
