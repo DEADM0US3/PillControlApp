@@ -393,65 +393,6 @@ fun CycleStatusSection(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    // Campo: Cantidad de pastillas
-                    Text(
-                        text = "Cantidad de pastillas",
-                        color = Black,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 14.sp
-                    )
-                    OutlinedTextField(
-                        value = pillCountInput,
-                        onValueChange = { pillCountInput = it.filter(Char::isDigit) },
-                        singleLine = true,
-                        label = { Text("Cantidad:", color = Black.copy(alpha = 0.4f)) },
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 6.dp),
-                        placeholder = {
-                            Text("21", color = Black.copy(alpha = 0.4f))
-                        },
-                        colors = TextFieldDefaults.colors(
-                            focusedIndicatorColor = Pink,
-                            focusedLabelColor = Pink,
-                            unfocusedContainerColor = Color.Transparent,
-                            focusedContainerColor = Color.Transparent,
-                            ),
-                    )
-
-                    // Campo: Hora de toma
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = "Hora de toma (HH:mm)",
-                        color = Black,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 14.sp
-                    )
-                    OutlinedTextField(
-                        value = takeHourInput,
-                        label = { Text("Hora de Toma:", color = Black.copy(alpha = 0.4f)) },
-                        onValueChange = { takeHourInput = it },
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 6.dp),
-                        placeholder = {
-                            Text("08:00", color = Black.copy(alpha = 0.4f))
-                        },
-
-                        colors = TextFieldDefaults.colors(
-                            focusedIndicatorColor = Color(0xFFD74468),
-                            unfocusedContainerColor = Color.Transparent,
-                            focusedContainerColor = Color.Transparent,
-                            )
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(20.dp))
-
                 // Botón de nuevo ciclo
                 Button(
                     onClick = { showDialog = true },
@@ -545,10 +486,24 @@ fun CreateCycleDialog(
                     color = Pink
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                TimePickerField(
-                    time = takeHourInput,
-                    onTimeChange = onTakeHourChange,
-                    modifier = Modifier.fillMaxWidth()
+                OutlinedTextField(
+                    value = takeHourInput,
+                    label = { Text("Hora de Toma:", color = Black.copy(alpha = 0.4f)) },
+                    onValueChange = onTakeHourChange,
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 6.dp),
+                    placeholder = {
+                        Text("08:00", color = Black.copy(alpha = 0.4f))
+                    },
+
+                    colors = TextFieldDefaults.colors(
+                        focusedIndicatorColor = Color(0xFFD74468),
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedContainerColor = Color.Transparent,
+                    )
                 )
             }
         },
@@ -621,58 +576,6 @@ fun PillCountDropdown(
             }
         }
     }
-}
-
-@Composable
-fun TimePickerField(
-    time: String,
-    onTimeChange: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val context = LocalContext.current
-
-    // Parse time para abrir diálogo con hora y minuto actuales
-    var hour: Int
-    var minute: Int
-    try {
-        val parts = time.split(":")
-        hour = parts[0].toInt()
-        minute = parts[1].toInt()
-    } catch (e: Exception) {
-        hour = 8
-        minute = 0
-    }
-
-    val timePickerDialog = remember {
-        TimePickerDialog(
-            context,
-            { _, selectedHour, selectedMinute ->
-                val formatted = String.format("%02d:%02d", selectedHour, selectedMinute)
-                onTimeChange(formatted)
-            },
-            hour,
-            minute,
-            true // formato 24h, false para AM/PM
-        )
-    }
-
-    OutlinedTextField(
-        value = time,
-        onValueChange = { onTimeChange(it) }, // también deja editar manualmente si quieres
-        singleLine = true,
-        readOnly = true, // evita que el teclado salga
-        modifier = modifier
-            .clickable { timePickerDialog.show() },
-        placeholder = { Text("Ej: 08:00", color = Color.Black.copy(alpha = 0.4f)) },
-        shape = RoundedCornerShape(12.dp),
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = Color.Transparent,
-            unfocusedContainerColor = Color.Transparent,
-            disabledContainerColor = Color.Transparent,
-            focusedIndicatorColor = Pink,
-            unfocusedIndicatorColor = Pink.copy(alpha = 0.4f)
-        )
-    )
 }
 
 @Composable
