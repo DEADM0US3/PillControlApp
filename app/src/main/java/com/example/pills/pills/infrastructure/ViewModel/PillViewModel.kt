@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import kotlin.toString
 
 data class PillUiState(
@@ -108,7 +109,6 @@ class PillViewModel(
     }
 
     fun takePill(
-        
         cycleId: String,
         date: LocalDate,
         status: String,
@@ -116,7 +116,13 @@ class PillViewModel(
     ) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null, successMessage = null)
-            val result = repository.takePill(userId, cycleId, date.toString(), status, complications)
+            val result = repository.takePill(
+                userId,
+                cycleId,
+                date.toString(),
+                date.format(DateTimeFormatter.ofPattern("HH:mm")),
+                status,
+                complications)
             _uiState.value = if (result.isSuccess) {
                 _uiState.value.copy(
                     isLoading = false,
@@ -134,12 +140,13 @@ class PillViewModel(
 
     fun editPill(
         pillId: String,
+        hour_taken: String? = null,
         status: String?,
         complications: String?
     ) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null, successMessage = null)
-            val result = repository.editPill(pillId, status, complications)
+            val result = repository.editPill(pillId, hour_taken, status, complications)
             _uiState.value = if (result.isSuccess) {
                 _uiState.value.copy(
                     isLoading = false,

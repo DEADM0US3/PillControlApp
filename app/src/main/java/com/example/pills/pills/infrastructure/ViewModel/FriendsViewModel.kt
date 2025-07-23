@@ -7,7 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pills.pills.domain.repository.FriendRepository
-import com.example.pills.pills.domain.repository.FriendWithUser
+import com.example.pills.pills.domain.repository.FriendWithCycleInfo
 import com.example.pills.pills.domain.repository.NotificationRepository
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
@@ -21,7 +21,7 @@ class FriendsViewModel(
 
     private val userId = supabaseClient.auth.currentUserOrNull()?.id.orEmpty()
 
-    var friends by mutableStateOf<List<FriendWithUser>>(emptyList())
+    var friends by mutableStateOf<List<FriendWithCycleInfo>>(emptyList())
 
     var loading by mutableStateOf(false)
         private set

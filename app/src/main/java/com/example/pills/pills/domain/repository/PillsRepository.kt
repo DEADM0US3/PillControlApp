@@ -18,6 +18,7 @@ data class CreatePill(
     val cycle_id: String,
     val user_id: String,
     val day_taken: String,
+    val hour_taken: String? = null,
     val status: String,
     val complications: String? = null,
 )
@@ -40,6 +41,7 @@ class PillRepository(private val supabaseClient: SupabaseClient) {
         userId: String,
         cycleId: String,
         date: String,
+        hour: String? = null,
         status: String,
         complications: String? = null
     ): Result<Unit> = withContext(Dispatchers.IO) {
@@ -53,6 +55,7 @@ class PillRepository(private val supabaseClient: SupabaseClient) {
                 cycle_id = cycleId,
                 user_id = userId,
                 day_taken = date,
+                hour_taken = hour,
                 status = status,
                 complications = complications
             )
@@ -118,6 +121,7 @@ class PillRepository(private val supabaseClient: SupabaseClient) {
 
     suspend fun editPill(
         pillId: String,
+        hour_taken: String?,
         status: String? = null,
         complications: String? = null
     ): Result<Unit> = withContext(Dispatchers.IO) {
@@ -125,6 +129,7 @@ class PillRepository(private val supabaseClient: SupabaseClient) {
             val updates = buildMap {
                 status?.let { put("status", it) }
                 complications?.let { put("complications", it) }
+                hour_taken?.let { put("hour_taken", it) }
             }
 
             if (updates.isEmpty()) throw IllegalArgumentException("No hay cambios para aplicar")

@@ -1,6 +1,7 @@
 package com.example.pills.pills.presentation.homePage
 
 
+import android.app.TimePickerDialog
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -54,7 +55,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pills.R
-import com.example.pills.pills.domain.repository.FriendWithUser
 import com.example.pills.pills.infrastructure.ViewModel.PillViewModel
 import com.example.pills.pills.presentation.components.TakePillComponent
 import com.example.pills.pills.presentation.cycle.CycleViewModel
@@ -69,7 +69,18 @@ import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import java.time.DayOfWeek
+import androidx.compose.material3.TextFieldDefaults
+import com.example.pills.pills.domain.repository.FriendWithCycleInfo
+import java.time.LocalTime
+import java.time.temporal.ChronoUnit
+import kotlin.ranges.contains
 
 
 private val Pink = Color(0xFFEA5A8C)
@@ -317,7 +328,7 @@ fun CycleStatusSection(
             ) {
                 Text(
                     text = "ESTADO DEL CICLO",
-                    color = Black,
+                    color = Pink,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 )
@@ -326,15 +337,13 @@ fun CycleStatusSection(
                     TextButton(
                         onClick = { showDeleteDialog = true },
                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = Color.Red
-                        )
+                        colors = ButtonDefaults.textButtonColors(contentColor = Color.Red)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Eliminar",
                             tint = Color.Red,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
@@ -346,71 +355,27 @@ fun CycleStatusSection(
                 }
             }
 
-            // Estado activo del ciclo
+            // Ciclo actual (si existe)
             if (cycle != null) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(PinkLight, RoundedCornerShape(16.dp))
-                        .padding(vertical = 16.dp, horizontal = 12.dp),
+                        .padding(vertical = 20.dp, horizontal = 16.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     DateBlock(title = "Inicio", date = startDate)
                     DateBlock(title = "Fin", date = endDate)
                 }
-            }
-
-            // Formulario para crear nuevo ciclo
-            if (cycle == null) {
+            }else {
+                var showDialog by remember { mutableStateOf(false) }
                 var pillCountInput by remember { mutableStateOf("21") }
                 var takeHourInput by remember { mutableStateOf("08:00") }
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = "Cantidad de pastillas",
-                        color = Black,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 14.sp
-                    )
-                    OutlinedTextField(
-                        value = pillCountInput,
-                        onValueChange = { pillCountInput = it.filter(Char::isDigit) },
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 6.dp),
-                        placeholder = { Text("21") }
-                    )
-
-                    Text(
-                        text = "Hora de toma (HH:mm)",
-                        color = Black,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 14.sp
-                    )
-                    OutlinedTextField(
-                        value = takeHourInput,
-                        onValueChange = { takeHourInput = it },
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        placeholder = { Text("08:00") }
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
                 Button(
-                    onClick = {
-                        val pillCount = pillCountInput.toIntOrNull() ?: 21
-                        val hour = takeHourInput.ifBlank { "08:00" }
-                        cycleViewModel.startNewCycle(today, pillCount, hour)
-                    },
+                    onClick = { showDialog = true },
                     colors = ButtonDefaults.buttonColors(containerColor = Pink),
                     shape = RoundedCornerShape(16.dp),
                     contentPadding = PaddingValues(vertical = 14.dp),
@@ -423,7 +388,24 @@ fun CycleStatusSection(
                         fontSize = 16.sp
                     )
                 }
+
+                if (showDialog) {
+                    CreateCycleDialog(
+                        pillCountInput = pillCountInput,
+                        takeHourInput = takeHourInput,
+                        onPillCountChange = { pillCountInput = it },
+                        onTakeHourChange = { takeHourInput = it },
+                        onDismiss = { showDialog = false },
+                        onConfirm = {
+                            val pillCount = pillCountInput.toIntOrNull() ?: 21
+                            val hour = takeHourInput.ifBlank { "08:00" }
+                            cycleViewModel.startNewCycle(today, pillCount, hour)
+                            showDialog = false
+                        }
+                    )
+                }
             }
+
 
             // Diálogo de confirmación para eliminar
             if (showDeleteDialog) {
@@ -432,13 +414,186 @@ fun CycleStatusSection(
                         cycleViewModel.deleteCurrentCycle()
                         showDeleteDialog = false
                     },
-                    onDismiss = {
-                        showDeleteDialog = false
+                    onDismiss = { showDeleteDialog = false }
+                )
+            }
+        }
+    }
+
+}
+
+@Composable
+fun CreateCycleDialog(
+    pillCountInput: String,
+    takeHourInput: String,
+    onPillCountChange: (String) -> Unit,
+    onTakeHourChange: (String) -> Unit,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Color.White,
+        shape = RoundedCornerShape(16.dp),
+        title = {
+            Text(
+                text = "Nuevo Ciclo",
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                color = Pink
+            )
+        },
+        text = {
+            Column(modifier = Modifier.padding(top = 4.dp)) {
+                Text(
+                    text = "Cantidad de pastillas",
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp,
+                    color = Pink
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                PillCountDropdown(
+                    selectedCount = pillCountInput,
+                    onSelectedChange = onPillCountChange,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    text = "Hora de toma (HH:mm)",
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp,
+                    color = Pink
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                TimePickerField(
+                    time = takeHourInput,
+                    onTimeChange = onTakeHourChange,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(containerColor = Pink),
+                shape = RoundedCornerShape(12.dp),
+                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp)
+            ) {
+                Text("Iniciar", color = White, fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            OutlinedButton(
+                onClick = onDismiss,
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Pink),
+                border = BorderStroke(1.dp, Pink),
+                shape = RoundedCornerShape(12.dp),
+                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp)
+            ) {
+                Text("Cancelar", fontWeight = FontWeight.Bold)
+            }
+        }
+    )
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PillCountDropdown(
+    selectedCount: String,
+    onSelectedChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val options = listOf("21", "27")
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded },
+        modifier = modifier
+    ) {
+        OutlinedTextField(
+            value = selectedCount,
+            onValueChange = {},
+            readOnly = true,
+            placeholder = { Text("Selecciona", color = Black.copy(alpha = 0.4f)) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier
+                .menuAnchor()
+                .fillMaxWidth(),
+            colors = TextFieldDefaults.colors(
+                focusedTextColor = Pink
+            ),
+            shape = RoundedCornerShape(12.dp)
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            options.forEach { selectionOption ->
+                DropdownMenuItem(
+                    text = { Text(selectionOption) },
+                    onClick = {
+                        onSelectedChange(selectionOption)
+                        expanded = false
                     }
                 )
             }
         }
     }
+}
+
+@Composable
+fun TimePickerField(
+    time: String,
+    onTimeChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+
+    // Parse time para abrir diálogo con hora y minuto actuales
+    var hour: Int
+    var minute: Int
+    try {
+        val parts = time.split(":")
+        hour = parts[0].toInt()
+        minute = parts[1].toInt()
+    } catch (e: Exception) {
+        hour = 8
+        minute = 0
+    }
+
+    val timePickerDialog = remember {
+        TimePickerDialog(
+            context,
+            { _, selectedHour, selectedMinute ->
+                val formatted = String.format("%02d:%02d", selectedHour, selectedMinute)
+                onTimeChange(formatted)
+            },
+            hour,
+            minute,
+            true // formato 24h, false para AM/PM
+        )
+    }
+
+    OutlinedTextField(
+        value = time,
+        onValueChange = { onTimeChange(it) }, // también deja editar manualmente si quieres
+        singleLine = true,
+        readOnly = true, // evita que el teclado salga
+        modifier = modifier
+            .clickable { timePickerDialog.show() },
+        placeholder = { Text("Ej: 08:00", color = Color.Black.copy(alpha = 0.4f)) },
+        shape = RoundedCornerShape(12.dp),
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = Color.Transparent,
+            unfocusedContainerColor = Color.Transparent,
+            disabledContainerColor = Color.Transparent,
+            focusedIndicatorColor = Pink,
+            unfocusedIndicatorColor = Pink.copy(alpha = 0.4f)
+        )
+    )
 }
 
 @Composable
@@ -543,8 +698,8 @@ fun DateBlock(title: String, date: String) {
 
 @Composable
 fun FriendsListSectionHome(
-    friends: List<FriendWithUser>,
-    onRemindClick: (FriendWithUser) -> Unit,
+    friends: List<FriendWithCycleInfo>,
+    onRemindClick: (FriendWithCycleInfo) -> Unit,
     navigateToFriends: () -> Unit
 ) {
     Box(
@@ -581,34 +736,75 @@ fun FriendsListSectionHome(
 }
 
 @Composable
-fun FriendItemHome(
-    user: FriendWithUser,
-    onRemind: () -> Unit
-) {
-    Row(
-        Modifier
+fun FriendItemHome(user: FriendWithCycleInfo, onRemind: () -> Unit) {
+    val hasCycle = user.recent_cycle_id != null
+    val hasTakenPill = user.pill_status_today == "taken"
+    val takeHour = user.take_hour // <- asegúrate de incluir `takeHour` en la clase si aún no está
+    val now = remember { LocalTime.now() }
+
+    // Calcular si está dentro de la ventana de 30 minutos
+    val isTimeToRemind = try {
+        takeHour?.let {
+            val takeTime = LocalTime.parse(it, DateTimeFormatter.ofPattern("HH:mm:ss"))
+            val diff = ChronoUnit.MINUTES.between(now, takeTime)
+            diff in -30..30 && !hasTakenPill
+        } ?: false
+    } catch (e: Exception) {
+        false
+    }
+
+    Card(
+        modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFDFDFD)),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(2.dp)
     ) {
-        CircleAvatar()
-        Spacer(Modifier.width(8.dp))
-        Text(
-            text = user.name ?: "Sin nombre",
-            modifier = Modifier.weight(1f),
-            color = Black,
-            fontSize = 16.sp
-        )
-        Button(
-            onClick = onRemind,
-            colors = ButtonDefaults.buttonColors(containerColor = Pink),
-            shape = RoundedCornerShape(8.dp),
-            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+        Row(
+            modifier = Modifier
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Recordar", color = Color.White, fontSize = 12.sp)
+            CircleAvatar()
+
+            Spacer(Modifier.width(12.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = user.name ?: "Guest",
+                    fontWeight = FontWeight.Bold,
+                    color = Black,
+                    fontSize = 16.sp
+                )
+
+                if (!hasCycle) {
+                    Text("Sin ciclo activo", color = Color.Gray, fontSize = 12.sp)
+                } else if (hasTakenPill) {
+                    Text("Ya tomó su pastilla hoy 💊", color = Color(0xFF4CAF50), fontSize = 12.sp)
+                } else if(hasCycle && !isTimeToRemind)
+                {
+                    Text("Le puedes recordar a las ${user.take_hour}", color = Pink, fontSize = 12.sp)
+                }
+                else {
+                    Text("Recuerdale!!!!!", color = Color(0xFFE91E63), fontSize = 12.sp)
+                }
+            }
+
+            if (hasCycle && isTimeToRemind) {
+                Button(
+                    onClick = onRemind,
+                    colors = ButtonDefaults.buttonColors(containerColor = Pink),
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                ) {
+                    Text("Recordar", color = Color.White, fontSize = 12.sp)
+                }
+            }
         }
     }
 }
+
 
 @Composable
 fun CircleAvatar() {

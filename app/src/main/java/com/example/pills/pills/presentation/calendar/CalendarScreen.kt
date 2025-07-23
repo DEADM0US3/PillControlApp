@@ -1,6 +1,7 @@
 package com.example.pills.pills.presentation.calendar
 
 import android.util.Log
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,6 +18,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,6 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.pills.pills.domain.entities.Pill
 import com.example.pills.pills.infrastructure.ViewModel.PillViewModel
 import com.example.pills.pills.presentation.components.TakePillComponent
 import com.example.pills.pills.presentation.cycle.CycleViewModel
@@ -37,6 +40,7 @@ import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.TextStyle
 import java.util.*
+
 
 // Paleta de colores simplificada y estable
 private val Pink = Color(0xFFEA5A8C)
@@ -238,11 +242,11 @@ fun CalendarScreen(
 
                         val cellColor = when {
                             isToday -> Today
-                            isSelected -> Pink
+                            isSelected -> PinkLight
                             dayEvent?.isMenstruation == true -> colorMenstruation
-                            dayEvent?.isOvulation == true -> GrayLine
+                            dayEvent?.isOvulation == true -> LightGray.copy(alpha = 2.5f)
                             dayEvent?.other == true -> colorOvulation
-                            isInMonth -> PinkLight
+                            isInMonth -> White
                             else -> LightGray.copy(alpha = 0.5f)
                         }
 
@@ -432,11 +436,8 @@ fun CalendarScreen(
         PillEditDialog(
             date = dialogDate!!,
             onDismiss = { showDialog = false },
-            onSave = { date, hour, pillCount, menstruation, observation ->
-                pillViewModel.takePill(cycleState?.getOrNull()?.id.toString(), date, hour, observation)
-                Log.d("PillEditDialog", "Guardando: $date, $hour, $pillCount, $menstruation, $observation")
-                showDialog = false
-            }
+            pillViewModel = pillViewModel,
+            cycleViewModel = cycleViewModel
         )
     }
 
@@ -445,24 +446,41 @@ fun CalendarScreen(
 @Composable
 fun PillEditDialog(
     date: LocalDate,
+    pillViewModel: PillViewModel,
+    cycleViewModel: CycleViewModel,
     onDismiss: () -> Unit,
-    onSave: (LocalDate, String, Int, Boolean, String) -> Unit, // params: fecha, hora, cantidad, menstruacion, observacion
-    initialHour: String = "",
-    initialPillCount: Int = 1,
-    initialMenstruation: Boolean = false,
-    initialObservation: Int = 0
 ) {
 
-    var hour by remember { mutableStateOf(initialHour) }
-    var pillCount by remember { mutableStateOf(initialPillCount.toString()) }
-    var menstruation by remember { mutableStateOf(initialMenstruation) }
+    LaunchedEffect(date) {
+        pillViewModel.loadPillOfDay(date)
+    }
+
+    val uiState by pillViewModel.uiState.collectAsState()
+    val activeCycleResult by cycleViewModel.cycleState.collectAsState()
+
+    var hour by remember { mutableStateOf("") }
     var observationText by remember { mutableStateOf("") }
+
+    val pill = uiState.pillOfDay
+    val cycle = activeCycleResult?.getOrNull()
+
+
+
+    // Carga valores si ya existe la pastilla
+    LaunchedEffect(pill) {
+        pill?.let {
+            hour = it.hour_taken ?: ""
+            observationText = it.complications ?: ""
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(16.dp),
+        containerColor = White,
         title = {
             Text(
-                text = "Editar toma del día ${date.dayOfMonth} de ${date.month.getDisplayName(java.time.format.TextStyle.FULL, Locale.getDefault()).replaceFirstChar { it.uppercase() }}",
+                text = "Editar toma del día ${date.dayOfMonth} de ${date.month.getDisplayName(TextStyle.FULL, Locale.getDefault()).replaceFirstChar { it.uppercase() }}",
                 color = Pink,
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp
@@ -470,43 +488,74 @@ fun PillEditDialog(
         },
         text = {
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Hora de toma
+                Text("Hora (HH:mm)", color = Pink, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                 OutlinedTextField(
                     value = hour,
+                    label = { Text("Hora de toma", color = Black.copy(alpha = 0.4f)) },
                     onValueChange = { hour = it },
-                    label = { Text("Hora de toma (HH:mm)") },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 6.dp),
+                    colors = TextFieldDefaults.colors(
+                        focusedIndicatorColor = Pink,
+                        focusedLabelColor = Pink,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedContainerColor = Color.Transparent
+                    )
                 )
 
                 Spacer(Modifier.height(12.dp))
 
-                Text("Observaciones", fontWeight = FontWeight.Bold, color = Pink)
+                Text("Observaciones", color = Pink, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                 OutlinedTextField(
                     value = observationText,
                     onValueChange = { observationText = it },
+                    shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(100.dp),
-                    placeholder = { Text("Escribe aquí tus observaciones...") },
+                        .height(100.dp)
+                        .padding(vertical = 6.dp),
+                    placeholder = {
+                        Text("Escribe aquí tus observaciones...", color = Black.copy(alpha = 0.4f))
+                    },
+                    colors = TextFieldDefaults.colors(
+                        focusedIndicatorColor = Pink,
+                        focusedLabelColor = Pink,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedContainerColor = Color.Transparent
+                    ),
                     maxLines = 4,
                     singleLine = false
                 )
-
             }
         },
         confirmButton = {
             Button(
                 onClick = {
-                    onSave(date, hour, pillCount.toIntOrNull() ?: 1, menstruation, observationText)
+                    pill?.let {
+                        // Si ya existe la pastilla, se edita
+                        pillViewModel.editPill(it.id.toString(), hour,"taken", observationText.ifBlank { null })
+                    } ?: run {
+                        // Si no existe, se crea
+                        cycle?.let {
+                            pillViewModel.takePill(
+                                cycleId = it.id.toString(),
+                                date = date,
+                                status = "taken",
+                                complications = observationText.ifBlank { null }
+                            )
+                        }
+                    }
                     onDismiss()
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = Pink),
                 shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.padding(horizontal = 8.dp)
+                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp)
             ) {
                 Text("Guardar", color = White, fontWeight = FontWeight.Bold)
             }
@@ -514,14 +563,14 @@ fun PillEditDialog(
         dismissButton = {
             Button(
                 onClick = onDismiss,
-                colors = ButtonDefaults.buttonColors(containerColor = White),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Pink),
                 shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.padding(horizontal = 8.dp)
+                border = BorderStroke(1.dp, Pink),
+                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp)
             ) {
-                Text("Cancelar", color = Pink, fontWeight = FontWeight.Bold)
+                Text("Cancelar", fontWeight = FontWeight.Bold)
             }
-        },
-        shape = RoundedCornerShape(16.dp),
-        containerColor = White
+        }
     )
 }
+

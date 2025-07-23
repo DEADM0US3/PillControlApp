@@ -18,12 +18,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.pills.pills.domain.repository.FriendWithCycleInfo
 import com.example.pills.pills.presentation.homePage.CircleAvatar
-import com.example.pills.pills.domain.repository.FriendWithUser
 import com.example.pills.ui.theme.Black
 import com.example.pills.ui.theme.Pink
 import org.koin.androidx.compose.koinViewModel
 import com.example.pills.pills.infrastructure.ViewModel.FriendsViewModel
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 @Composable
 fun FriendScreen(
@@ -119,9 +122,9 @@ fun FriendsScreenHeader(onBackPressed: () -> Unit) {
 
 @Composable
 fun FriendsListSection(
-    friends: List<FriendWithUser>,
+    friends: List<FriendWithCycleInfo>,
     onAddClick: () -> Unit,
-    onRemindClick: (FriendWithUser) -> Unit
+    onRemindClick: (FriendWithCycleInfo) -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -153,30 +156,71 @@ fun FriendsListSection(
 }
 
 @Composable
-fun FriendItem(user: FriendWithUser, onRemind: () -> Unit) {
-    Row(
-        Modifier
+fun FriendItem(user: FriendWithCycleInfo, onRemind: () -> Unit) {
+    val hasCycle = user.recent_cycle_id != null
+    val hasTakenPill = user.pill_status_today == "taken"
+    val takeHour = user.take_hour // <- asegúrate de incluir `takeHour` en la clase si aún no está
+    val now = remember { LocalTime.now() }
+
+    // Calcular si está dentro de la ventana de 30 minutos
+    val isTimeToRemind = try {
+        takeHour?.let {
+            val takeTime = LocalTime.parse(it, DateTimeFormatter.ofPattern("HH:mm:ss"))
+            val diff = ChronoUnit.MINUTES.between(now, takeTime)
+            diff in -30..30 && !hasTakenPill
+        } ?: false
+    } catch (e: Exception) {
+        false
+    }
+
+    Card(
+        modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFDFDFD)),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(2.dp)
     ) {
-        CircleAvatar(
-            // Podrías usar user.profile_image_url para cargar la imagen real
-        )
-        Spacer(Modifier.width(8.dp))
-        Text(
-            text = user.name ?: "Sin nombre",
-            modifier = Modifier.weight(1f),
-            color = Black,
-            fontSize = 16.sp
-        )
-        Button(
-            onClick = onRemind,
-            colors = ButtonDefaults.buttonColors(containerColor = Pink),
-            shape = RoundedCornerShape(8.dp),
-            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+        Row(
+            modifier = Modifier
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Recordar", color = Color.White, fontSize = 12.sp)
+            CircleAvatar()
+
+            Spacer(Modifier.width(12.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = user.name ?: "Guest",
+                    fontWeight = FontWeight.Bold,
+                    color = Black,
+                    fontSize = 16.sp
+                )
+
+                if (!hasCycle) {
+                    Text("Sin ciclo activo", color = Color.Gray, fontSize = 12.sp)
+                } else if (hasTakenPill) {
+                    Text("Ya tomó su pastilla hoy 💊", color = Color(0xFF4CAF50), fontSize = 12.sp)
+                } else if(hasCycle && !isTimeToRemind)
+                {
+                    Text("Le puedes recordar a las ${user.take_hour}", color = Pink, fontSize = 12.sp)
+                }
+                else {
+                    Text("Recuerdale!!!!!", color = Color(0xFFE91E63), fontSize = 12.sp)
+                }
+            }
+
+            if (hasCycle && isTimeToRemind) {
+                Button(
+                    onClick = onRemind,
+                    colors = ButtonDefaults.buttonColors(containerColor = Pink),
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                ) {
+                    Text("Recordar", color = Color.White, fontSize = 12.sp)
+                }
+            }
         }
     }
 }

@@ -11,11 +11,24 @@ import kotlinx.serialization.Serializable
 
 
 @Serializable
-data class FriendWithUser(
+data class FriendWithCycleInfo(
     val user_id: String,
     val friend_id: String,
     val friend_user_id: String,
-    val name: String? = null,
+    val name: String,
+
+    // Ciclo más reciente
+    val recent_cycle_id: String?,
+    val start_date: String?,        // o LocalDate
+    val end_date: String?,
+    val pill_count: Int?,
+    val current_day: Int?,
+    val take_hour: String?,
+
+    // Pastilla de hoy
+    val pill_id_today: String?,
+    val pill_status_today: String?, // "taken", "skipped" o null
+    val pill_taken_date: String?    // o LocalDate
 )
 
 
@@ -33,16 +46,14 @@ class FriendRepository(private val supabaseClient: SupabaseClient) {
         }
     }
 
-    suspend fun getFriends(userId: String): Result<List<FriendWithUser>> = withContext(Dispatchers.IO) {
+    suspend fun getFriends(userId: String): Result<List<FriendWithCycleInfo>> = withContext(Dispatchers.IO) {
         return@withContext try {
             val response = supabaseClient
                 .from("friends_with_user")
                 .select{
                     filter { eq("user_id", userId) }
                 }
-                .decodeList<FriendWithUser>()
-
-
+                .decodeList<FriendWithCycleInfo>()
 
             Log.d("FriendRepository", "Friends with user info for $userId: $response")
             Result.success(response)
