@@ -1,0 +1,15 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\app\\src",
+    "\\app\\src\\main",
+    "\\app\\src\\main\\java",
+    "\\app\\src\\main\\java\\com",
+    "\\app\\src\\main\\java\\com\\example",
+    "\\app\\src\\main\\java\\com\\example\\pills",
+    "\\app\\src\\main\\java\\com\\example\\pills\\pills",
+    "\\app\\src\\main\\java\\com\\example\\pills\\pills\\domain",
+    "\\app\\src\\main\\java\\com\\example\\pills\\pills\\domain\\supabase"
+  ],
+  "PreviewInSolutionExplorer": false
+}

@@ -2,7 +2,6 @@ package com.example.pills.pills.presentation.components
 
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.CalendarToday
@@ -33,4 +32,4 @@ fun BottomNavBar(
             label = { Text("Perfil") }
         )
     }
-} 
+}
