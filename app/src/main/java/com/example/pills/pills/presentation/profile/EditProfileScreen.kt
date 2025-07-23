@@ -58,6 +58,7 @@ import coil.request.ImageRequest
 import com.example.pills.R
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
+import org.koin.androidx.compose.koinViewModel
 
 // Paleta de colores premium basada en el degradado
 object ProfileColors {
@@ -81,12 +82,11 @@ object ProfileColors {
 fun EditProfileScreen(
     userName: String = "Laura Torres",
     userEmail: String = "laura@example.com",
-    userPhone: String = "+52 123 456 7890",
-    userAge: String = "28",
     onBackPressed: () -> Unit = {},
-    onSaveProfile: (String, String, String, String) -> Unit = { _, _, _, _ -> }
+    onSaveProfile: (String, String) -> Unit = { _, _ -> }
 ) {
-    val viewModel: EditProfileViewModel = viewModel()
+
+    val viewModel: EditProfileViewModel = koinViewModel()
     val state by viewModel.state.collectAsState()
 
     var showSaveDialog by remember { mutableStateOf(false) }
@@ -104,8 +104,9 @@ fun EditProfileScreen(
 
     // Cargar datos del usuario al iniciar
     LaunchedEffect(Unit) {
-        viewModel.loadUserProfile(userName, userEmail, userPhone, userAge)
+        viewModel.loadUserProfile()
     }
+
 
     // Manejar éxito del guardado con animación
     LaunchedEffect(state.isSuccess) {
@@ -113,7 +114,7 @@ fun EditProfileScreen(
             showSuccessAnimation = true
             delay(2000)
             try {
-                onSaveProfile(state.name, state.email, state.phone, state.age)
+                onSaveProfile(state.name, state.email)
             } catch (e: Exception) {
                 // Manejar error de callback de forma segura
             }
@@ -271,48 +272,20 @@ fun AnimatedProfileSection(
             }
 
             // Anillo externo giratorio
-            Box(
-                modifier = Modifier
-                    .size(160.dp)
-                    .rotate(rotationAngle)
-                    .background(
-                        Brush.sweepGradient(
-                            colors = listOf(
-                                ProfileColors.primary.copy(alpha = 0.3f),
-                                ProfileColors.accent.copy(alpha = 0.6f),
-                                ProfileColors.primary.copy(alpha = 0.3f)
-                            )
-                        ),
-                        CircleShape
-                    )
-            )
+
 
             // Avatar principal
             Box(
                 modifier = Modifier
-                    .size(140.dp)
-                    .scale(profileImageAnimation)
+                    .size(120.dp)
                     .clip(CircleShape)
-                    .background(
-                        Brush.radialGradient(
-                            colors = listOf(
-                                ProfileColors.primaryLight,
-                                ProfileColors.surface
-                            )
-                        )
-                    )
-                    .border(4.dp, ProfileColors.surface, CircleShape)
-                    .clickable { onImageClick() }
-                    .shadow(
-                        elevation = 8.dp,
-                        shape = CircleShape
-                    ),
+                    .background(Color(0xFFB3E5FC)),
                 contentAlignment = Alignment.Center
             ) {
-                if (!state.profileImageUri.isNullOrBlank()) {
+                if (!state.imageUrl.isNullOrBlank()) {
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
-                            .data(state.profileImageUri)
+                            .data(state.imageUrl)
                             .crossfade(true)
                             .build(),
                         contentDescription = "Foto de perfil",
@@ -330,60 +303,15 @@ fun AnimatedProfileSection(
             }
 
             // Botón de cámara flotante con animación
-            var cameraScale by remember { mutableStateOf(1f) }
-            val cameraAnimation by animateFloatAsState(
-                targetValue = cameraScale,
-                animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
-            )
 
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .offset((-8).dp, (-8).dp)
-                    .size(48.dp)
-                    .scale(cameraAnimation)
-                    .clip(CircleShape)
-                    .background(
-                        Brush.linearGradient(
-                            colors = listOf(
-                                ProfileColors.accent,
-                                ProfileColors.primary
-                            )
-                        )
-                    )
-                    .border(3.dp, ProfileColors.surface, CircleShape)
-                    .clickable {
-                        cameraScale = 1.2f
-                        cameraScale = 1f
-                        onImageClick()
-                    }
-                    .shadow(6.dp, CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.CameraAlt,
-                    contentDescription = "Cambiar foto",
-                    tint = Color.White,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
+
+
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+
 
         // Texto con animación de entrada
-        AnimatedVisibility(
-            visible = true,
-            enter = fadeIn() + slideInVertically()
-        ) {
-            Text(
-                text = "Toca para cambiar tu foto",
-                color = Color.White.copy(alpha = 0.9f),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                textAlign = TextAlign.Center
-            )
-        }
+
     }
 }
 
@@ -438,12 +366,6 @@ fun ModernFormSection(
             },
             FieldData("Correo electrónico", state.email, Icons.Default.Email) { value: String ->
                 viewModel.onEvent(EditProfileEvent.UpdateEmail(value))
-            },
-            FieldData("Teléfono", state.phone, Icons.Default.Phone) { value: String ->
-                viewModel.onEvent(EditProfileEvent.UpdatePhone(value))
-            },
-            FieldData("Edad", state.age, Icons.Default.Cake) { value: String ->
-                viewModel.onEvent(EditProfileEvent.UpdateAge(value))
             }
         )
 
@@ -469,8 +391,6 @@ fun ModernFormSection(
                     icon = fieldData.icon,
                     keyboardType = when (fieldData.label) {
                         "Correo electrónico" -> KeyboardType.Email
-                        "Teléfono" -> KeyboardType.Phone
-                        "Edad" -> KeyboardType.Number
                         else -> KeyboardType.Text
                     }
                 )

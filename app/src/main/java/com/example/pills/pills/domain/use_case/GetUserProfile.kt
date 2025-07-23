@@ -1,14 +1,12 @@
 package com.example.pills.pills.domain.use_case
 
 import com.example.pills.pills.domain.repository.ProfileRepository
+import com.example.pills.pills.domain.repository.ProfileRepository.UserProfile
 
-/**
- * Use case for getting the current user's profile
- */
 class GetUserProfile(
     private val repository: ProfileRepository
 ) {
-    suspend operator fun invoke(): Result<ProfileRepository.UserProfile> {
+    suspend operator fun invoke(): Result<UserProfile> {
         return repository.getUserProfile()
     }
-} 
+}

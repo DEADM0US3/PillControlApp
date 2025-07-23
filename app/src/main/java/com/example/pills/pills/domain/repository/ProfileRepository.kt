@@ -2,7 +2,6 @@ package com.example.pills.pills.domain.repository
 
 import android.content.Context
 import android.net.Uri
-import android.util.Log
 import com.example.pills.Logger
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
@@ -16,11 +15,25 @@ import kotlinx.serialization.json.put
 import java.io.File
 import java.io.FileOutputStream
 import java.util.UUID
+import kotlinx.serialization.Serializable
 
 class ProfileRepository(
     private val supabaseClient: SupabaseClient,
     private val context: Context
 ) {
+
+    @Serializable
+    data class UserProfileDto(
+        val id: String,
+        val email: String,
+        val full_name: String? = null,
+        val phone: String? = null,
+        val age: String? = null,
+        val profile_image_url: String? = null,
+        val created_at: String? = null,
+        val updated_at: String? = null
+    )
+
 
     data class UserProfile(
         val id: String,
@@ -33,219 +46,177 @@ class ProfileRepository(
         val updatedAt: String?
     )
 
-    suspend fun getUserProfile(): Result<UserProfile> {
-        return withContext(Dispatchers.IO) {
-            try {
-                val currentUser = supabaseClient.auth.currentUserOrNull()
-                    ?: return@withContext Result.failure(Exception("No authenticated user found"))
+    suspend fun getUserProfile(): Result<UserProfile> = withContext(Dispatchers.IO) {
+        try {
+            val user = supabaseClient.auth.currentUserOrNull()
+                ?: return@withContext Result.failure(Exception("No authenticated user"))
 
-                val profileData = try {
-                    supabaseClient
-                        .from("users")
-                        .select(columns = Columns.list("id", "email", "full_name", "phone", "age", "profile_image_url", "created_at", "updated_at")) {
-                            filter {
-                                eq("id", currentUser.id)
-                            }
-                        }
-                        .decodeList<Map<String, Any>>()
-                        .firstOrNull()
-                } catch (e: Exception) {
-                    Logger.d("ProfileRepository", "Could not fetch from users table: ${e.message}")
-                    null
+            val profile = supabaseClient
+                .from("users")
+                .select(
+                    Columns.list("id", "email", "full_name", "phone", "age", "profile_image_url", "created_at", "updated_at")
+                ) {
+                    filter { eq("id", user.id) }
                 }
+                .decodeList<UserProfileDto>()
+                .firstOrNull() ?: return@withContext Result.failure(Exception("User profile not found"))
 
-                if (profileData == null) {
-                    return@withContext Result.failure(Exception("User profile not found in database"))
-                }
-
-                val userProfile = UserProfile(
-                    id = profileData["id"]?.toString() ?: currentUser.id,
-                    email = profileData["email"]?.toString() ?: currentUser.email ?: "",
-                    fullName = profileData["full_name"]?.toString(),
-                    phone = profileData["phone"]?.toString(),
-                    age = profileData["age"]?.toString(),
-                    profileImageUrl = profileData["profile_image_url"]?.toString(),
-                    createdAt = profileData["created_at"]?.toString(),
-                    updatedAt = profileData["updated_at"]?.toString()
+            Result.success(
+                UserProfile(
+                    id = profile.id,
+                    email = profile.email,
+                    fullName = profile.full_name,
+                    phone = profile.phone,
+                    age = profile.age,
+                    profileImageUrl = profile.profile_image_url,
+                    createdAt = profile.created_at,
+                    updatedAt = profile.updated_at
                 )
+            )
 
-                Logger.d("ProfileRepository", "User profile retrieved successfully: ${userProfile.id}")
-                Result.success(userProfile)
-            } catch (e: Exception) {
-                Logger.e("ProfileRepository", "Error getting user profile: ${e.message}")
-                Result.failure(e)
-            }
+        } catch (e: Exception) {
+            Logger.e("ProfileRepository", "getUserProfile error: ${e.message}")
+            Result.failure(e)
         }
     }
 
     suspend fun updateUserProfile(
         fullName: String,
-        email: String,
-        phone: String?,
-        age: String?
-    ): Result<Unit> {
-        return withContext(Dispatchers.IO) {
-            try {
-                if (fullName.isBlank()) return@withContext Result.failure(Exception("Full name cannot be empty"))
-                if (email.isBlank()) return@withContext Result.failure(Exception("Email cannot be empty"))
+        email: String
+    ): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            if (fullName.isBlank() || email.isBlank())
+                return@withContext Result.failure(Exception("Full name and email are required"))
 
-                val currentUser = supabaseClient.auth.currentUserOrNull()
-                    ?: return@withContext Result.failure(Exception("No authenticated user found"))
+            val user = supabaseClient.auth.currentUserOrNull()
+                ?: return@withContext Result.failure(Exception("No authenticated user"))
 
-                supabaseClient.auth.updateUser {
-                    data = buildJsonObject {
-                        put("full_name", fullName)
-                    }
+            // 🔄 Actualizar en Supabase Auth (nombre y correo)
+            supabaseClient.auth.updateUser {
+                this.email = email
+                this.data = buildJsonObject {
+                    put("full_name", fullName)
                 }
-
-                try {
-                    supabaseClient
-                        .from("users")
-                        .update(
-                            mapOf(
-                                "full_name" to fullName,
-                                "email" to email,
-                                "phone" to phone,
-                                "age" to age
-                            )
-                        ) {
-                            filter {
-                                eq("id", currentUser.id)
-                            }
-                        }
-
-                    Logger.d("ProfileRepository", "User profile updated successfully: ${currentUser.id}")
-                } catch (e: Exception) {
-                    Logger.d("ProfileRepository", "Could not update users table: ${e.message}")
-                }
-
-                Result.success(Unit)
-            } catch (e: Exception) {
-                Logger.e("ProfileRepository", "Error updating user profile: ${e.message}")
-                Result.failure(e)
             }
+
+            // 🔄 Actualizar en tabla "users"
+            supabaseClient.from("users").update(
+                mapOf(
+                    "full_name" to fullName,
+                    "email" to email
+                )
+            ) {
+                filter { eq("id", user.id) }
+            }
+
+            Logger.d("ProfileRepository", "User profile updated: ${user.id}")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Logger.e("ProfileRepository", "updateUserProfile error: ${e.message}")
+            Result.failure(e)
         }
     }
 
-    suspend fun updateProfileImage(imageUrl: String): Result<Unit> {
-        return withContext(Dispatchers.IO) {
-            try {
-                if (imageUrl.isBlank()) return@withContext Result.failure(Exception("Image URL cannot be empty"))
 
-                val currentUser = supabaseClient.auth.currentUserOrNull()
-                    ?: return@withContext Result.failure(Exception("No authenticated user found"))
 
-                supabaseClient
-                    .from("users")
-                    .update(
-                        mapOf(
-                            "profile_image_url" to imageUrl
-                        )
-                    ) {
-                        filter {
-                            eq("id", currentUser.id)
-                        }
-                    }
+    suspend fun updateProfileImage(imageUrl: String): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            if (imageUrl.isBlank())
+                return@withContext Result.failure(Exception("Image URL is required"))
 
-                Logger.d("ProfileRepository", "Profile image updated successfully: ${currentUser.id}")
-                Result.success(Unit)
-            } catch (e: Exception) {
-                Logger.e("ProfileRepository", "Error updating profile image: ${e.message}")
-                Result.failure(e)
+            val user = supabaseClient.auth.currentUserOrNull()
+                ?: return@withContext Result.failure(Exception("No authenticated user"))
+
+            supabaseClient.from("users").update(
+                mapOf("profile_image_url" to imageUrl)
+            ) {
+                filter { eq("id", user.id) }
             }
+
+            Logger.d("ProfileRepository", "Profile image updated for user: ${user.id}")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Logger.e("ProfileRepository", "updateProfileImage error: ${e.message}")
+            Result.failure(e)
         }
     }
 
-    suspend fun uploadProfileImage(imageUri: String): Result<String> {
-        return withContext(Dispatchers.IO) {
-            var tempFile: File? = null
-            try {
-                if (imageUri.isBlank()) return@withContext Result.failure(Exception("Image URI cannot be empty"))
+    suspend fun uploadProfileImage(imageUri: String): Result<String> = withContext(Dispatchers.IO) {
+        var tempFile: File? = null
+        try {
+            if (imageUri.isBlank())
+                return@withContext Result.failure(Exception("Image URI is required"))
 
-                val currentUser = supabaseClient.auth.currentUserOrNull()
-                    ?: return@withContext Result.failure(Exception("No authenticated user found"))
+            val user = supabaseClient.auth.currentUserOrNull()
+                ?: return@withContext Result.failure(Exception("No authenticated user"))
 
-                val uri = Uri.parse(imageUri)
-                val inputStream = context.contentResolver.openInputStream(uri)
-                    ?: return@withContext Result.failure(Exception("Could not open image file"))
+            val uri = Uri.parse(imageUri)
+            val inputStream = context.contentResolver.openInputStream(uri)
+                ?: return@withContext Result.failure(Exception("Failed to open image file"))
 
-                tempFile = File.createTempFile("profile_image_", ".jpg", context.cacheDir)
-                val outputStream = FileOutputStream(tempFile)
+            tempFile = File.createTempFile("profile_", ".jpg", context.cacheDir).apply {
+                FileOutputStream(this).use { output -> inputStream.copyTo(output) }
+            }
 
-                inputStream.use { input ->
-                    outputStream.use { output ->
-                        input.copyTo(output)
-                    }
+            if (tempFile.length() > 5 * 1024 * 1024)
+                return@withContext Result.failure(Exception("Image file too large (max 5MB)"))
+
+            val fileName = "${user.id}/profile_${UUID.randomUUID()}.jpg"
+
+            supabaseClient.storage
+                .from("profile-images")
+                .upload(fileName, tempFile.readBytes())
+
+            val publicUrl = supabaseClient.storage
+                .from("profile-images")
+                .publicUrl(fileName)
+
+            Logger.d("ProfileRepository", "Uploaded image: $publicUrl")
+            Result.success(publicUrl)
+        } catch (e: Exception) {
+            Logger.e("ProfileRepository", "uploadProfileImage error: ${e.message}")
+            Result.failure(e)
+        } finally {
+            tempFile?.delete()
+        }
+    }
+
+    suspend fun deleteProfileImage(imageUrl: String): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            if (imageUrl.isBlank())
+                return@withContext Result.failure(Exception("Image URL is required"))
+
+            val filePath = imageUrl.substringAfter("profile-images/")
+
+            if (filePath.isBlank())
+                return@withContext Result.failure(Exception("Invalid image URL"))
+
+            supabaseClient.storage
+                .from("profile-images")
+                .delete(filePath)
+
+            Logger.d("ProfileRepository", "Deleted image: $filePath")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Logger.e("ProfileRepository", "deleteProfileImage error: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
+    suspend fun doesUserProfileExist(userId: String): Boolean = withContext(Dispatchers.IO) {
+        try {
+            if (userId.isBlank()) return@withContext false
+
+            val result = supabaseClient.from("users")
+                .select(Columns.list("id")) {
+                    filter { eq("id", userId) }
                 }
+                .decodeList<Map<String, String>>()
 
-                if (tempFile.length() > 5 * 1024 * 1024) {
-                    return@withContext Result.failure(Exception("Image file too large. Maximum size is 5MB"))
-                }
-
-                val fileName = "${currentUser.id}/profile_${UUID.randomUUID()}.jpg"
-
-                supabaseClient.storage
-                    .from("profile-images")
-                    .upload(fileName, tempFile.readBytes())
-
-                val publicUrl = supabaseClient.storage
-                    .from("profile-images")
-                    .publicUrl(fileName)
-
-                Logger.d("ProfileRepository", "Image uploaded successfully: $publicUrl")
-                Result.success(publicUrl)
-            } catch (e: Exception) {
-                Logger.e("ProfileRepository", "Error uploading profile image: ${e.message}")
-                Result.failure(e)
-            } finally {
-                tempFile?.let { if (it.exists()) it.delete() }
-            }
-        }
-    }
-
-    suspend fun deleteProfileImage(imageUrl: String): Result<Unit> {
-        return withContext(Dispatchers.IO) {
-            try {
-                if (imageUrl.isBlank()) return@withContext Result.failure(Exception("Image URL cannot be empty"))
-
-                val currentUser = supabaseClient.auth.currentUserOrNull()
-                    ?: return@withContext Result.failure(Exception("No authenticated user found"))
-
-                val fileName = imageUrl.substringAfterLast("/")
-                if (fileName.isBlank()) return@withContext Result.failure(Exception("Invalid image URL format"))
-
-                supabaseClient.storage
-                    .from("profile-images")
-                    .delete(fileName)
-
-                Logger.d("ProfileRepository", "Image deleted successfully: $fileName")
-                Result.success(Unit)
-            } catch (e: Exception) {
-                Logger.e("ProfileRepository", "Error deleting profile image: ${e.message}")
-                Result.failure(e)
-            }
-        }
-    }
-
-    suspend fun doesUserProfileExist(userId: String): Boolean {
-        return withContext(Dispatchers.IO) {
-            try {
-                if (userId.isBlank()) return@withContext false
-
-                val result = supabaseClient
-                    .from("users")
-                    .select(columns = Columns.list("id")) {
-                        filter {
-                            eq("id", userId)
-                        }
-                    }
-                    .decodeList<Map<String, String>>()
-
-                result.isNotEmpty()
-            } catch (e: Exception) {
-                Logger.e("ProfileRepository", "Error checking if user profile exists: ${e.message}")
-                false
-            }
+            result.isNotEmpty()
+        } catch (e: Exception) {
+            Logger.e("ProfileRepository", "doesUserProfileExist error: ${e.message}")
+            false
         }
     }
 
@@ -253,29 +224,24 @@ class ProfileRepository(
         userId: String,
         email: String,
         fullName: String
-    ): Result<Unit> {
-        return withContext(Dispatchers.IO) {
-            try {
-                if (userId.isBlank()) return@withContext Result.failure(Exception("User ID cannot be empty"))
-                if (email.isBlank()) return@withContext Result.failure(Exception("Email cannot be empty"))
-                if (fullName.isBlank()) return@withContext Result.failure(Exception("Full name cannot be empty"))
+    ): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            if (userId.isBlank() || email.isBlank() || fullName.isBlank())
+                return@withContext Result.failure(Exception("All fields are required"))
 
-                supabaseClient
-                    .from("users")
-                    .insert(
-                        mapOf(
-                            "id" to userId,
-                            "email" to email,
-                            "full_name" to fullName
-                        )
-                    )
+            supabaseClient.from("users").insert(
+                mapOf(
+                    "id" to userId,
+                    "email" to email,
+                    "full_name" to fullName
+                )
+            )
 
-                Logger.d("ProfileRepository", "User profile created successfully: $userId")
-                Result.success(Unit)
-            } catch (e: Exception) {
-                Logger.e("ProfileRepository", "Error creating user profile: ${e.message}")
-                Result.failure(e)
-            }
+            Logger.d("ProfileRepository", "Created user profile: $userId")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Logger.e("ProfileRepository", "createUserProfile error: ${e.message}")
+            Result.failure(e)
         }
     }
 }

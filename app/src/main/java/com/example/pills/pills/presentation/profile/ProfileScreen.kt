@@ -141,7 +141,7 @@ fun ProfileScreen(
             shape = RoundedCornerShape(12.dp)
         ) {
             Text(
-                text = homeState.userName,
+                text = homeState.userName.trim('"'),
                 color = Color.White,
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp,
