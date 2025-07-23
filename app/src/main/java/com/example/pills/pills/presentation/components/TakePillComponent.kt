@@ -96,6 +96,8 @@ fun TakePillComponent(
         }
     } ?: false
 
+    var AlertDialogTake by remember { mutableStateOf(false) }
+
 
 //    val isTimeToTake = cycleState?.getOrNull()?.take_hour?.let { hourStr ->
 //        try {
@@ -173,7 +175,7 @@ fun TakePillComponent(
             ) {
                 Text(
                     text = "TOMA DE HOY",
-                    color = Black,
+                    color = com.example.pills.ui.theme.Black,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
                     modifier = Modifier.fillMaxWidth(),
@@ -198,9 +200,9 @@ fun TakePillComponent(
                             .padding(horizontal = 12.dp, vertical = 6.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(takeHourFormatted.first, fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Black)
+                            Text(takeHourFormatted.first, fontWeight = FontWeight.Bold, fontSize = 20.sp, color = com.example.pills.ui.theme.Black)
                             Text(":", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Pink)
-                            Text(takeHourFormatted.second, fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Black)
+                            Text(takeHourFormatted.second, fontWeight = FontWeight.Bold, fontSize = 20.sp, color = com.example.pills.ui.theme.Black)
                         }
                     }
                     Text(
@@ -214,6 +216,7 @@ fun TakePillComponent(
                         onClick = {
                             if (!isTakenToday && isTimeToTake) {
                                 pillViewModel.takePill(cycleState?.getOrNull()?.id ?: "", today, "taken", null)
+                                AlertDialogTake = true
                             }
                         },
                         colors = ButtonDefaults.buttonColors(

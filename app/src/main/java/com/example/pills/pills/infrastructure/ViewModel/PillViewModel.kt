@@ -31,6 +31,25 @@ class PillViewModel(
 
     private val userId = client.auth.currentUserOrNull()?.id.toString();
 
+    fun loadPillsOfCycle( year: Int, month: Int) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null, successMessage = null)
+            val result = repository.getPillsInMonth(userId, year, month)
+            _uiState.value = if (result.isSuccess) {
+                _uiState.value.copy(
+                    isLoading = false,
+                    pillsOfMonth = result.getOrDefault(emptyList()),
+                    errorMessage = null
+                )
+            } else {
+                _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = result.exceptionOrNull()?.message ?: "Error desconocido"
+                )
+            }
+        }
+    }
+
     fun loadPillsOfMonth( year: Int, month: Int) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null, successMessage = null)
