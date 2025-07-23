@@ -78,6 +78,8 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import java.time.DayOfWeek
 import androidx.compose.material3.TextFieldDefaults
 import com.example.pills.pills.domain.repository.FriendWithCycleInfo
+import com.example.pills.pills.presentation.loading.LoadingScreen
+import kotlinx.coroutines.delay
 import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 import kotlin.ranges.contains
@@ -112,6 +114,7 @@ fun HomeScreenUI(
         firstDayOfWeek = DayOfWeek.SUNDAY
     )
 
+
     LaunchedEffect(visibleMonth) {
         cycleViewModel.fetchActiveCycle()
         pillViewModel.loadPillsOfMonth(visibleMonth.year, visibleMonth.monthValue)
@@ -121,6 +124,19 @@ fun HomeScreenUI(
     LaunchedEffect(Unit) {
         friendsViewModel.loadFriends()
     }
+
+
+    var isLoading by remember { mutableStateOf(true) }
+
+    LaunchedEffect(Unit) {
+        delay(400)
+        isLoading = false
+    }
+    if (isLoading){
+        return LoadingScreen()
+
+    }
+
 
     Box(
         modifier = Modifier

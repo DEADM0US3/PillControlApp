@@ -29,6 +29,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.pills.R
 import com.example.pills.pills.presentation.homePage.HomeViewModel
+import com.example.pills.pills.presentation.loading.LoadingScreen
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
@@ -55,24 +56,7 @@ fun ProfileScreen(
     }
 
     if (homeState.isLoading) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0xFFF48FB1),
-                            Color(0xFFFCE4EC)
-                        )
-                    )
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator(
-                color = Color.White,
-                modifier = Modifier.size(48.dp)
-            )
-        }
+        LoadingScreen()
     } else if (homeState.userName == "Guest" && homeState.userEmail.isEmpty()) {
         // Usuario no autenticado
         Box(
@@ -110,154 +94,149 @@ fun ProfileScreen(
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-        Spacer(modifier = Modifier.height(32.dp))
-        // Imagen de perfil
-        Box(
-            modifier = Modifier
-                .size(120.dp)
-                .clip(CircleShape)
-                .background(Color(0xFFB3E5FC)),
-            contentAlignment = Alignment.Center
-        ) {
-            // Mostrar imagen de perfil real si existe, sino imagen por defecto
-            if (!homeState.profileImageUrl.isNullOrBlank()) {
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(homeState.profileImageUrl)
-                        .crossfade(true)
-                        .build(),
-                    contentDescription = "Foto de perfil",
-                    modifier = Modifier.fillMaxSize(),
-                    error = painterResource(id = R.drawable.ic_launcher_foreground),
-                    onError = {
-                        // Manejo de error de carga de imagen
-                    }
-                )
-            } else {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                    contentDescription = "Foto de perfil",
-                    modifier = Modifier.size(100.dp)
+            Spacer(modifier = Modifier.height(32.dp))
+            // Imagen de perfil
+            Box(
+                modifier = Modifier
+                    .size(120.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFFB3E5FC)),
+                contentAlignment = Alignment.Center
+            ) {
+                if (!homeState.profileImageUrl.isNullOrBlank()) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(homeState.profileImageUrl)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = "Foto de perfil",
+                        modifier = Modifier.fillMaxSize(),
+                        error = painterResource(id = R.drawable.ic_launcher_foreground),
+                    )
+                } else {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                        contentDescription = "Foto de perfil",
+                        modifier = Modifier.size(100.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Surface(
+                color = Color(0xFFF48FB1),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(
+                    text = homeState.userName,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 6.dp)
                 )
             }
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-        // Nombre
-        Surface(
-            color = Color(0xFFF48FB1),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Text(
-                text = homeState.userName.trim('"'),
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp,
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 6.dp)
-            )
-        }
 
-        val context = LocalContext.current
-        val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val context = LocalContext.current
+            val clipboardManager =
+                context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
 
-        if (!homeState.userId.isNullOrBlank()) {
-            Spacer(modifier = Modifier.height(16.dp))
+            if (homeState.userEmail.isNotBlank() || !homeState.userPhone.isNullOrBlank() || !homeState.userAge.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(16.dp))
 
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF0F4)), // rosa suave
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF0F4)), // rosa suave
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                 ) {
-                    Column(
-                        modifier = Modifier.weight(1f)
+                    Row(
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "ID de usuario",
-                            fontSize = 12.sp,
-                            color = Color.Gray
-                        )
-                        Text(
-                            text = homeState.userId,
-                            fontSize = 14.sp,
-                            color = Color.Black,
-                            fontWeight = FontWeight.Medium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
+                        Column(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = "ID de usuario",
+                                fontSize = 12.sp,
+                                color = Color.Gray
+                            )
+                            Text(
+                                text = homeState.userId,
+                                fontSize = 14.sp,
+                                color = Color.Black,
+                                fontWeight = FontWeight.Medium,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
 
-                    TextButton(
-                        onClick = {
-                            val clip = ClipData.newPlainText("UserID", homeState.userId)
-                            clipboardManager.setPrimaryClip(clip)
-                            Toast.makeText(context, "ID copiado", Toast.LENGTH_SHORT).show()
-                        },
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.ContentCopy,
-                            contentDescription = "Copiar ID",
-                            tint = Color(0xFFF48FB1),
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "Copiar",
-                            color = Color(0xFFF48FB1),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        TextButton(
+                            onClick = {
+                                val clip = ClipData.newPlainText("UserID", homeState.userId)
+                                clipboardManager.setPrimaryClip(clip)
+                                Toast.makeText(context, "ID copiado", Toast.LENGTH_SHORT).show()
+                            },
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ContentCopy,
+                                contentDescription = "Copiar ID",
+                                tint = Color(0xFFF48FB1),
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Copiar",
+                                color = Color(0xFFF48FB1),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             }
-        }
 
             Spacer(modifier = Modifier.height(24.dp))
-        // Opciones
-        ProfileOption(text = "Editar perfil", onClick = onEditProfile)
-        ProfileOption(text = "Ayuda", onClick = onHelp)
-        ProfileOption(text = "Configuración", onClick = onSettings)
-        Spacer(modifier = Modifier.height(24.dp))
-        // Switch Mascota Activa
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Switch(
-                checked = petActive,
-                onCheckedChange = {
-                    petActive = it
-                    onPetActiveChange(it)
-                },
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color(0xFFF48FB1),
-                    checkedTrackColor = Color(0xFFF8BBD0)
+
+            ProfileOption(text = "Editar perfil", onClick = onEditProfile)
+            ProfileOption(text = "Ayuda", onClick = onHelp)
+            ProfileOption(text = "Configuración", onClick = onSettings)
+            Spacer(modifier = Modifier.height(24.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Switch(
+                    checked = petActive,
+                    onCheckedChange = {
+                        petActive = it
+                        onPetActiveChange(it)
+                    },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = Color(0xFFF48FB1),
+                        checkedTrackColor = Color(0xFFF8BBD0)
+                    )
                 )
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Mascota Activa", color = Color.White)
-        }
-        Spacer(modifier = Modifier.height(32.dp))
-        // Botón cerrar sesión
-        Button(
-            onClick = {
-                coroutineScope.launch {
-                    homeViewModel.logout {
-                        navigateToLogin()
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Mascota Activa", color = Color.White)
+            }
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Button(
+                onClick = {
+                    coroutineScope.launch {
+                        homeViewModel.logout {
+                            navigateToLogin()
+                        }
                     }
-                }
-            },
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF48FB1)),
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Cerrar sesión", color = Color.White, fontWeight = FontWeight.Bold)
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF48FB1)),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Cerrar sesión", color = Color.White, fontWeight = FontWeight.Bold)
+            }
         }
-    }
     }
 }
 

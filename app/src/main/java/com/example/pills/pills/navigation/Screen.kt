@@ -3,6 +3,7 @@ package com.example.pills.pills.navigation
 sealed class Screen(val route: String) {
     object Login : Screen("login")
     object SignUp : Screen("signup")
+    object Loading : Screen("loading")
 
     object ConfigurationScreen : Screen("configuration")
     object FriendScreen : Screen("friends")

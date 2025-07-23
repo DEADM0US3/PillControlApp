@@ -33,8 +33,10 @@ import com.example.pills.pills.domain.entities.Pill
 import com.example.pills.pills.infrastructure.ViewModel.PillViewModel
 import com.example.pills.pills.presentation.components.TakePillComponent
 import com.example.pills.pills.presentation.cycle.CycleViewModel
+import com.example.pills.pills.presentation.loading.LoadingScreen
 import com.kizitonwose.calendar.compose.VerticalCalendar
 import com.kizitonwose.calendar.compose.rememberCalendarState
+import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
 import java.time.LocalDate
 import java.time.YearMonth
@@ -91,6 +93,7 @@ fun CalendarScreen(
 
     }
 
+
     val cycleState by cycleViewModel.cycleState.collectAsState()
     val calendarEvents by cycleViewModel.calendarEvents.collectAsState()
     val pillsOfMonth by pillViewModel.uiState.collectAsState()
@@ -104,6 +107,17 @@ fun CalendarScreen(
 
 
     val scrollState = rememberScrollState()
+
+    var isLoading by remember { mutableStateOf(true) }
+
+    LaunchedEffect(Unit) {
+        delay(400)
+        isLoading = false
+    }
+    if (isLoading){
+        return LoadingScreen()
+
+    }
 
     Column(
         modifier = Modifier
