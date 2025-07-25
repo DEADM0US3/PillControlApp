@@ -77,6 +77,7 @@ private val supabaseClient: SupabaseClient
                 } else {
                     Log.e("CycleViewModel", "Error al eliminar ciclo", result.exceptionOrNull())
                 }
+                fetchActiveCycle()
             }
         }
     }

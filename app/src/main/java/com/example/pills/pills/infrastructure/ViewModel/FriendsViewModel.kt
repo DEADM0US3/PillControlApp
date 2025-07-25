@@ -48,9 +48,10 @@ class FriendsViewModel(
         viewModelScope.launch {
             val result = friendRepository.addFriend(userId, friendId)
             if (result.isSuccess) {
-                loadFriends()
+
                 onSuccess()
             }
+            loadFriends()
         }
     }
 
@@ -62,5 +63,6 @@ class FriendsViewModel(
                 message = "¡Recuerda tomar tu pastilla hoy!"
             )
         }
+        loadFriends()
     }
 }

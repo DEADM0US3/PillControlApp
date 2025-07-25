@@ -215,26 +215,26 @@ fun ProfileScreen(
 
             ProfileOption(text = "Editar perfil", onClick = onEditProfile)
             ProfileOption(text = "Ayuda", onClick = onHelp)
-            ProfileOption(text = "Configuración", onClick = onSettings)
-            Spacer(modifier = Modifier.height(24.dp))
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Switch(
-                    checked = petActive,
-                    onCheckedChange = {
-                        petActive = it
-                        onPetActiveChange(it)
-                    },
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = Color(0xFFF48FB1),
-                        checkedTrackColor = Color(0xFFF8BBD0)
-                    )
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Mascota Activa", color = Color.White)
-            }
-            Spacer(modifier = Modifier.height(32.dp))
+//            ProfileOption(text = "Configuración", onClick = onSettings)
+//            Spacer(modifier = Modifier.height(24.dp))
+//            Row(
+//                verticalAlignment = Alignment.CenterVertically
+//            ) {
+//                Switch(
+//                    checked = petActive,
+//                    onCheckedChange = {
+//                        petActive = it
+//                        onPetActiveChange(it)
+//                    },
+//                    colors = SwitchDefaults.colors(
+//                        checkedThumbColor = Color(0xFFF48FB1),
+//                        checkedTrackColor = Color(0xFFF8BBD0)
+//                    )
+//                )
+//                Spacer(modifier = Modifier.width(8.dp))
+//                Text("Mascota Activa", color = Color.White)
+//            }
+//            Spacer(modifier = Modifier.height(32.dp))
 
             Button(
                 onClick = {

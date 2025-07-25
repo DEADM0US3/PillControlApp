@@ -554,6 +554,8 @@ fun PillEditDialog(
                     pill?.let {
                         // Si ya existe la pastilla, se edita
                         pillViewModel.editPill(it.id.toString(), hour,"taken", observationText.ifBlank { null })
+
+                        pillViewModel.loadPillsOfMonth(date.year, date.monthValue)
                     } ?: run {
                         // Si no existe, se crea
                         cycle?.let {
@@ -565,8 +567,8 @@ fun PillEditDialog(
                                 complications = observationText.ifBlank { null }
                             )
                         }
+                        pillViewModel.loadPillsOfMonth(date.year, date.monthValue)
                     }
-                    pillViewModel.loadPillsOfMonth(date.year, date.monthValue)
                     onDismiss()
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = Pink),

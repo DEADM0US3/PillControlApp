@@ -137,7 +137,10 @@ class PillViewModel(
                     errorMessage = result.exceptionOrNull()?.message ?: "Error desconocido"
                 )
             }
+
+            loadPillsOfCycle(cycleId)
             loadPillsOfMonth(date.year, date.monthValue)
+
         }
     }
 
@@ -162,6 +165,7 @@ class PillViewModel(
                     errorMessage = result.exceptionOrNull()?.message ?: "Error desconocido"
                 )
             }
+
 
         }
     }
