@@ -2,6 +2,7 @@ package com.example.pills.pills.presentation.homePage
 
 
 import android.app.TimePickerDialog
+import android.icu.util.Calendar
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -69,14 +70,21 @@ import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Surface
 import java.time.DayOfWeek
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TimeInput
+import androidx.compose.material3.TimePickerDefaults
+import androidx.compose.material3.rememberTimePickerState
+import androidx.compose.ui.window.Dialog
 import com.example.pills.pills.domain.repository.FriendWithCycleInfo
 import com.example.pills.pills.presentation.loading.LoadingScreen
 import kotlinx.coroutines.delay
@@ -451,6 +459,19 @@ fun CreateCycleDialog(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
 ) {
+    var showTimePicker by remember { mutableStateOf(true)}
+
+    var initialHour: Int
+    var initialMinute: Int
+    if (takeHourInput.matches(Regex("\\d{2}:\\d{2}"))) {
+        val parts = takeHourInput.split(":")
+        initialHour = parts[0].toIntOrNull() ?: Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+        initialMinute = parts[1].toIntOrNull() ?: Calendar.getInstance().get(Calendar.MINUTE)
+    } else {
+        val currentTime = Calendar.getInstance()
+        initialHour = currentTime.get(Calendar.HOUR_OF_DAY)
+        initialMinute = currentTime.get(Calendar.MINUTE)
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = Color.White,
@@ -489,7 +510,8 @@ fun CreateCycleDialog(
                 OutlinedTextField(
                     value = takeHourInput,
                     label = { Text("Hora de Toma:", color = Black.copy(alpha = 0.4f)) },
-                    onValueChange = onTakeHourChange,
+                    onValueChange = { },
+                    readOnly = true,
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
@@ -498,12 +520,22 @@ fun CreateCycleDialog(
                     placeholder = {
                         Text("08:00", color = Black.copy(alpha = 0.4f))
                     },
-
                     colors = TextFieldDefaults.colors(
+                        focusedTextColor = Pink,
                         focusedIndicatorColor = Color(0xFFD74468),
                         unfocusedContainerColor = Color.Transparent,
                         focusedContainerColor = Color.Transparent,
-                    )
+                    ),
+                    interactionSource = remember { MutableInteractionSource() }
+                        .also { interactionSource ->
+                            LaunchedEffect(interactionSource) {
+                                interactionSource.interactions.collect {
+                                    if (it is PressInteraction.Release) {
+                                        showTimePicker = true // Abrir el diálogo de TimeInput
+                                    }
+                                }
+                            }
+                        }
                 )
             }
         },
@@ -529,9 +561,103 @@ fun CreateCycleDialog(
             }
         }
     )
+    if (showTimePicker) {
+        TimeInputDialog(
+            showDialog = showTimePicker,
+            onDismissRequest = { showTimePicker = false },
+            onTimeSelected = { newTime ->
+                onTakeHourChange(newTime)
+                showTimePicker = false
+            },
+            initialHour = initialHour,
+            initialMinute = initialMinute
+        )
+    }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TimeInputDialog(
+    showDialog: Boolean,
+    onDismissRequest: () -> Unit,
+    onTimeSelected: (String) -> Unit,
+    initialHour: Int,
+    initialMinute: Int
+) {
+    val timePickerState = rememberTimePickerState(
+        initialHour = initialHour,
+        initialMinute = initialMinute,
+        is24Hour = true
+    )
 
+    if (showDialog) {
+        Dialog(onDismissRequest = onDismissRequest) {
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = White // Usando tu color White
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Seleccionar Hora",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Pink, // Usando tu color Pink
+                        modifier = Modifier.padding(bottom = 20.dp)
+                    )
+                    TimeInput(
+                        state = timePickerState,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = TimePickerDefaults.colors(
+                            // Clock dial and input field colors can be customized here
+                            // For example, to match your Pink theme:
+                            clockDialColor = Pink.copy(alpha = 0.1f),
+                            clockDialSelectedContentColor = White,
+                            clockDialUnselectedContentColor = Pink,
+                            timeSelectorSelectedContainerColor = Pink,
+                            timeSelectorUnselectedContainerColor = Color.Transparent,
+                            timeSelectorSelectedContentColor = White,
+                            timeSelectorUnselectedContentColor = Pink,
+                            periodSelectorSelectedContainerColor = Pink,
+                            periodSelectorUnselectedContainerColor = Color.Transparent,
+                            periodSelectorSelectedContentColor = White,
+                            periodSelectorUnselectedContentColor = Pink,
+                            // Ensure the text input part is also themed if needed
+                            // For TextFieldColors within TimeInput, you might need more specific theming
+                            // or rely on the overall MaterialTheme component theming.
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(
+                            onClick = onDismissRequest,
+                            colors = ButtonDefaults.textButtonColors(contentColor = Pink)
+                        ) {
+                            Text("Cancelar")
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        TextButton(
+                            onClick = {
+                                val selectedHour = String.format("%02d", timePickerState.hour)
+                                val selectedMinute = String.format("%02d", timePickerState.minute)
+                                onTimeSelected("$selectedHour:$selectedMinute")
+                                onDismissRequest()
+                            },
+                            colors = ButtonDefaults.textButtonColors(contentColor = Pink)
+                        ) {
+                            Text("Aceptar")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+}
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PillCountDropdown(
@@ -557,7 +683,9 @@ fun PillCountDropdown(
                 .menuAnchor()
                 .fillMaxWidth(),
             colors = TextFieldDefaults.colors(
-                focusedTextColor = Pink
+                focusedTextColor = Pink,
+                focusedLabelColor = Pink,
+
             ),
             shape = RoundedCornerShape(12.dp)
         )
