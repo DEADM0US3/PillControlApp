@@ -123,14 +123,6 @@ fun HomeScreenUI(
         firstDayOfWeek = DayOfWeek.SUNDAY
     )
 
-    var refreshTrigger by remember { mutableStateOf(0) }
-
-    LaunchedEffect(visibleMonth, refreshTrigger) {
-        cycleViewModel.fetchActiveCycle()
-        pillViewModel.loadPillsOfMonth(visibleMonth.year, visibleMonth.monthValue)
-        calendarState.scrollToMonth(visibleMonth)
-    }
-
 
     LaunchedEffect(visibleMonth) {
         cycleViewModel.fetchActiveCycle()
@@ -180,12 +172,7 @@ fun HomeScreenUI(
             MascotReminderSection()
             CycleStatusSection()
             Spacer(Modifier.height(8.dp))
-            TakePillComponent(
-                onPillTaken = {
-                    refreshTrigger++
-                }
-            )
-
+            TakePillComponent()
             FriendsListSectionHome(
                 friends = friends,
                 onRemindClick = { friend -> friendsViewModel.sendReminder(friend.friend_id) },

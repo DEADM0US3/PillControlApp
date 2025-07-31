@@ -57,11 +57,9 @@ private val White = Color(0xFFFFFFFF)
 
 @Composable
 fun TakePillComponent(
-    onPillTaken: () -> Unit,
     cycleViewModel: CycleViewModel = koinViewModel(),
     pillViewModel: PillViewModel = koinViewModel()
 ) {
-
 
     val today = remember { LocalDate.now() }
     var visibleMonth by remember { mutableStateOf(YearMonth.now()) }
@@ -267,19 +265,7 @@ fun TakePillComponent(
             onDismissRequest = { AlertDialogTake = false },
             confirmButton = {
                 Button(
-                    onClick = {
-                        if (!isTakenToday && isTimeToTake) {
-                            pillViewModel.takePill(
-                                cycleState?.getOrNull()?.id ?: "",
-                                today,
-                                hourTake.toString(),
-                                "taken",
-                                null
-                            )
-                            AlertDialogTake = true
-                            onPillTaken() // << Notifica al padre que se debe refrescar
-                        }
-                    },
+                    onClick = { AlertDialogTake = false },
                     colors = ButtonDefaults.buttonColors(containerColor = Pink),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.padding(8.dp)

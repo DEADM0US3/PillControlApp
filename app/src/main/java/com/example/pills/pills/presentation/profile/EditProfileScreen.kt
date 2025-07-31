@@ -238,7 +238,7 @@ fun EditProfileScreen(
                 viewModel.onEvent(EditProfileEvent.SaveProfile)
                 showSaveDialog = false
             },
-            onDismiss = { showSaveDialog = false}
+            onDismiss = { }
         )
     }
 }
@@ -275,7 +275,32 @@ fun AnimatedProfileSection(
 
 
             // Avatar principal
-
+            Box(
+                modifier = Modifier
+                    .size(120.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFFB3E5FC)),
+                contentAlignment = Alignment.Center
+            ) {
+                if (!state.imageUrl.isNullOrBlank()) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(state.imageUrl)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = "Foto de perfil",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                        error = painterResource(id = R.drawable.ic_launcher_foreground)
+                    )
+                } else {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                        contentDescription = "Foto de perfil",
+                        modifier = Modifier.size(100.dp)
+                    )
+                }
+            }
 
             // Botón de cámara flotante con animación
 
