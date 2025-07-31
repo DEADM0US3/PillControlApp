@@ -2,6 +2,7 @@ package com.example.pills.pills.presentation.homePage
 
 
 import android.app.TimePickerDialog
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import android.icu.util.Calendar
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -594,7 +595,7 @@ fun TimeInputDialog(
         Dialog(onDismissRequest = onDismissRequest) {
             Surface(
                 shape = RoundedCornerShape(16.dp),
-                color = White // Usando tu color White
+                color = White
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -603,15 +604,13 @@ fun TimeInputDialog(
                     Text(
                         text = "Seleccionar Hora",
                         style = MaterialTheme.typography.titleMedium,
-                        color = Pink, // Usando tu color Pink
+                        color = Pink,
                         modifier = Modifier.padding(bottom = 20.dp)
                     )
                     TimeInput(
                         state = timePickerState,
                         modifier = Modifier.fillMaxWidth(),
                         colors = TimePickerDefaults.colors(
-                            // Clock dial and input field colors can be customized here
-                            // For example, to match your Pink theme:
                             clockDialColor = Pink.copy(alpha = 0.1f),
                             clockDialSelectedContentColor = White,
                             clockDialUnselectedContentColor = Pink,
@@ -623,9 +622,6 @@ fun TimeInputDialog(
                             periodSelectorUnselectedContainerColor = Color.Transparent,
                             periodSelectorSelectedContentColor = White,
                             periodSelectorUnselectedContentColor = Pink,
-                            // Ensure the text input part is also themed if needed
-                            // For TextFieldColors within TimeInput, you might need more specific theming
-                            // or rely on the overall MaterialTheme component theming.
                         )
                     )
                     Spacer(modifier = Modifier.height(20.dp))
@@ -682,7 +678,8 @@ fun PillCountDropdown(
             modifier = Modifier
                 .menuAnchor()
                 .fillMaxWidth(),
-            colors = TextFieldDefaults.colors(
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Pink,
                 focusedTextColor = Pink,
                 focusedLabelColor = Pink,
 
