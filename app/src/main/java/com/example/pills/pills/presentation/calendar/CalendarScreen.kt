@@ -87,13 +87,14 @@ fun CalendarScreen(
     var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
     var showDialog by remember { mutableStateOf(false) }
     var dialogDate by remember { mutableStateOf<LocalDate?>(null) }
-    var refreshTrigger by remember { mutableStateOf(0) }
+    var infoDialogMessage by remember { mutableStateOf<Pair<String, String>?>(null) }
 
-    LaunchedEffect(visibleMonth, refreshTrigger) {
-        cycleViewModel.fetchActiveCycle()
-        pillViewModel.loadPillsOfMonth(visibleMonth.year, visibleMonth.monthValue)
-        calendarState.scrollToMonth(visibleMonth)
+    fun showInfoDialog(title: String, message: String) {
+        infoDialogMessage = title to message
     }
+
+    val scrollState = rememberScrollState()
+    var isLoading by remember { mutableStateOf(true) }
 
     LaunchedEffect(visibleMonth) {
         cycleViewModel.fetchActiveCycle()
@@ -105,23 +106,46 @@ fun CalendarScreen(
     val calendarEvents by cycleViewModel.calendarEvents.collectAsState()
     val pillsOfMonth by pillViewModel.uiState.collectAsState()
 
-    Log.d("CalendarScreen", "Pills of month: $pillsOfMonth")
-
-    fun openDialog(date: LocalDate) {
-        dialogDate = date
-        showDialog = true
-    }
-
-    val scrollState = rememberScrollState()
-
-    var isLoading by remember { mutableStateOf(true) }
-
     LaunchedEffect(Unit) {
         delay(400)
         isLoading = false
     }
+
     if (isLoading) {
         return LoadingScreen()
+    }
+
+    fun openDialog(date: LocalDate) {
+        val pillTakenToday = pillsOfMonth.pillsOfMonth.any {
+            LocalDate.parse(it.day_taken) == LocalDate.now() && it.status == "taken"
+        }
+        val pillTakenOnDate = pillsOfMonth.pillsOfMonth.any {
+            LocalDate.parse(it.day_taken) == date && it.status == "taken"
+        }
+        when {
+            date.isAfter(LocalDate.now()) -> {
+                showInfoDialog(
+                    "No puedes registrar una toma en el futuro.",
+                    "Selecciona una fecha válida."
+                )
+            }
+            date == LocalDate.now() && pillTakenToday -> {
+                showInfoDialog(
+                    "Ya tomaste la pastilla hoy.",
+                    "No es posible editar este día."
+                )
+            }
+            pillTakenOnDate -> {
+                showInfoDialog(
+                    "Ya tomaste la pastilla este día.",
+                    "No puedes editar un registro ya confirmado."
+                )
+            }
+            else -> {
+                dialogDate = date
+                showDialog = true
+            }
+        }
     }
 
     Column(
@@ -155,15 +179,7 @@ fun CalendarScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-
-        // Tarjeta de toma simplificada
-        TakePillComponent(
-            onPillTaken = {
-                refreshTrigger++
-            }
-        )
-
-
+        TakePillComponent()
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -250,7 +266,13 @@ fun CalendarScreen(
                         val isInMonth = day.position == com.kizitonwose.calendar.core.DayPosition.MonthDate
                         val dayEvent = calendarEvents[day.date]
 
+                        val pillTakenToday = pillsOfMonth.pillsOfMonth.any {
+                            LocalDate.parse(it.day_taken) == day.date && it.status == "taken"
+                        }
+
                         val cellColor = when {
+                            day.date.isAfter(today) -> LightGray.copy(alpha = 0.4f) // gris para futuros
+                            pillTakenToday -> PinkLight // color para días con pastilla tomada
                             isToday -> Today
                             isSelected -> PinkLight
                             dayEvent?.isMenstruation == true -> colorMenstruation
@@ -261,6 +283,7 @@ fun CalendarScreen(
                         }
 
                         val textColor = when {
+                            day.date.isAfter(today) -> GrayText.copy(alpha = 0.6f)
                             isToday -> White
                             isInMonth -> Black
                             else -> GrayText
@@ -437,6 +460,29 @@ fun CalendarScreen(
             onDismiss = { showDialog = false },
             pillViewModel = pillViewModel,
             cycleViewModel = cycleViewModel
+        )
+    }
+
+    infoDialogMessage?.let { (title, message) ->
+        AlertDialog(
+            onDismissRequest = { infoDialogMessage = null },
+            confirmButton = {
+                Button(
+                    onClick = { infoDialogMessage = null },
+                    colors = ButtonDefaults.buttonColors(containerColor = Pink),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text("Entendido", color = White)
+                }
+            },
+            title = {
+                Text(text = title, fontWeight = FontWeight.Bold, color = Pink)
+            },
+            text = {
+                Text(text = message, color = Black)
+            },
+            containerColor = White,
+            shape = RoundedCornerShape(16.dp)
         )
     }
 }
