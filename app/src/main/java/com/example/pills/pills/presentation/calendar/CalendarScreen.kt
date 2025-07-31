@@ -84,6 +84,13 @@ fun CalendarScreen(
     var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
     var showDialog by remember { mutableStateOf(false) }
     var dialogDate by remember { mutableStateOf<LocalDate?>(null) }
+    var refreshTrigger by remember { mutableStateOf(0) }
+
+    LaunchedEffect(visibleMonth, refreshTrigger) {
+        cycleViewModel.fetchActiveCycle()
+        pillViewModel.loadPillsOfMonth(visibleMonth.year, visibleMonth.monthValue)
+        calendarState.scrollToMonth(visibleMonth)
+    }
 
 
     LaunchedEffect(visibleMonth) {
@@ -152,7 +159,12 @@ fun CalendarScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         // Tarjeta de toma simplificada
-        TakePillComponent()
+        TakePillComponent(
+            onPillTaken = {
+                refreshTrigger++
+            }
+        )
+
 
         Spacer(modifier = Modifier.height(16.dp))
 
