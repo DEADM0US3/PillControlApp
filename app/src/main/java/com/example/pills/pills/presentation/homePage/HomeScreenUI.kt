@@ -451,6 +451,9 @@ fun CreateCycleDialog(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
 ) {
+    val timeRegex = remember { Regex("^([01]\\d|2[0-3]):[0-5]\\d$") }
+    var hourError by remember { mutableStateOf(false) }
+    var sanitizedHour by remember { mutableStateOf(takeHourInput) }
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = Color.White,
@@ -487,9 +490,16 @@ fun CreateCycleDialog(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 OutlinedTextField(
-                    value = takeHourInput,
+                    value = sanitizedHour,
                     label = { Text("Hora de Toma:", color = Black.copy(alpha = 0.4f)) },
-                    onValueChange = onTakeHourChange,
+                    onValueChange = { input ->
+                        // Permitimos solo dígitos y ':'
+                        val filtered = input.filter { it.isDigit() || it == ':' }
+                        sanitizedHour = filtered
+                        hourError = !timeRegex.matches(filtered)
+                        onTakeHourChange(filtered)
+                    },
+                    isError = hourError,
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
@@ -498,9 +508,13 @@ fun CreateCycleDialog(
                     placeholder = {
                         Text("08:00", color = Black.copy(alpha = 0.4f))
                     },
-
+                    supportingText = {
+                        if (hourError) {
+                            Text("Formato inválido (HH:mm)", color = Color.Red)
+                        }
+                    },
                     colors = TextFieldDefaults.colors(
-                        focusedIndicatorColor = Color(0xFFD74468),
+                        focusedIndicatorColor = Pink,
                         unfocusedContainerColor = Color.Transparent,
                         focusedContainerColor = Color.Transparent,
                     )
