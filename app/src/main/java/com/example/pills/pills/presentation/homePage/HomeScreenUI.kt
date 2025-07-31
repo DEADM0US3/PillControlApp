@@ -509,7 +509,7 @@ fun CreateCycleDialog(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 OutlinedTextField(
-                    value = takeHourInput,
+                    value = sanitizedHour,
                     label = { Text("Hora de Toma:", color = Black.copy(alpha = 0.4f)) },
                     onValueChange = { },
                     readOnly = true,
