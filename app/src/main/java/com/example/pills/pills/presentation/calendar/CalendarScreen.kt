@@ -65,6 +65,9 @@ val colorOvulation = Color(0xFFEDF5FD)     // Amarillo claro
 val colorPillTaken = Color(0xFFA6FFC9)     // Verde fuerte
 val Today = Color(0xFFA6E3FF)     // Verde fuerte
 
+
+
+
 @Composable
 fun CalendarScreen(
     onDayClick: (LocalDate) -> Unit = {},
@@ -92,14 +95,11 @@ fun CalendarScreen(
         calendarState.scrollToMonth(visibleMonth)
     }
 
-
     LaunchedEffect(visibleMonth) {
         cycleViewModel.fetchActiveCycle()
         pillViewModel.loadPillsOfMonth(visibleMonth.year, visibleMonth.monthValue)
         calendarState.scrollToMonth(visibleMonth)
-
     }
-
 
     val cycleState by cycleViewModel.cycleState.collectAsState()
     val calendarEvents by cycleViewModel.calendarEvents.collectAsState()
@@ -112,7 +112,6 @@ fun CalendarScreen(
         showDialog = true
     }
 
-
     val scrollState = rememberScrollState()
 
     var isLoading by remember { mutableStateOf(true) }
@@ -121,9 +120,8 @@ fun CalendarScreen(
         delay(400)
         isLoading = false
     }
-    if (isLoading){
+    if (isLoading) {
         return LoadingScreen()
-
     }
 
     Column(
@@ -143,7 +141,6 @@ fun CalendarScreen(
     ) {
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Título
         Text(
             text = "Calendario",
             color = White,
@@ -158,6 +155,7 @@ fun CalendarScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
+
         // Tarjeta de toma simplificada
         TakePillComponent(
             onPillTaken = {
@@ -166,15 +164,14 @@ fun CalendarScreen(
         )
 
 
+
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Navegación de mes simplificada
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-            // Flecha izquierda
             Box(
                 modifier = Modifier
                     .size(44.dp)
@@ -187,7 +184,6 @@ fun CalendarScreen(
             }
             Spacer(modifier = Modifier.width(16.dp))
 
-            // Nombre del mes y año
             Box(
                 modifier = Modifier
                     .background(Pink, shape = RoundedCornerShape(25.dp))
@@ -204,7 +200,6 @@ fun CalendarScreen(
             }
             Spacer(modifier = Modifier.width(16.dp))
 
-            // Flecha derecha
             Box(
                 modifier = Modifier
                     .size(44.dp)
@@ -219,17 +214,8 @@ fun CalendarScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Encabezado de días de la semana
         Row(Modifier.fillMaxWidth()) {
-            listOf(
-                "Domingo",
-                "Lunes",
-                "Martes",
-                "Miércoles",
-                "Jueves",
-                "Viernes",
-                "Sábado"
-            ).forEach { dayName ->
+            listOf("Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado").forEach { dayName ->
                 Text(
                     text = dayName.take(3),
                     modifier = Modifier.weight(1f),
@@ -261,10 +247,8 @@ fun CalendarScreen(
                     dayContent = { day ->
                         val isSelected = day.date == selectedDate
                         val isToday = day.date == today
-                        val isInMonth =
-                            day.position == com.kizitonwose.calendar.core.DayPosition.MonthDate
+                        val isInMonth = day.position == com.kizitonwose.calendar.core.DayPosition.MonthDate
                         val dayEvent = calendarEvents[day.date]
-
 
                         val cellColor = when {
                             isToday -> Today
@@ -276,8 +260,6 @@ fun CalendarScreen(
                             else -> LightGray.copy(alpha = 0.5f)
                         }
 
-
-                        // Determinar el color del texto
                         val textColor = when {
                             isToday -> White
                             isInMonth -> Black
@@ -295,7 +277,7 @@ fun CalendarScreen(
                                     color = GrayLine,
                                     shape = RoundedCornerShape(12.dp)
                                 )
-                                .clickable(enabled = isInMonth) {
+                                .clickable(enabled = isInMonth && !day.date.isAfter(today)) {
                                     selectedDate = day.date
                                     openDialog(day.date)
                                 },
@@ -305,7 +287,6 @@ fun CalendarScreen(
                                 modifier = Modifier.fillMaxSize(),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                // Número del día centrado
                                 Box(
                                     modifier = Modifier.weight(1f),
                                     contentAlignment = Alignment.Center
@@ -319,7 +300,6 @@ fun CalendarScreen(
                                     )
                                 }
 
-                                // Área de indicadores en la parte inferior
                                 if (isInMonth) {
                                     Row(
                                         modifier = Modifier
@@ -328,16 +308,12 @@ fun CalendarScreen(
                                         horizontalArrangement = Arrangement.Center,
                                         verticalAlignment = Alignment.Bottom
                                     ) {
-                                        // Simulación de eventos basados en el día
                                         val dayOfMonth = day.date.dayOfMonth
 
-                                        // Pastilla tomada (círculo pequeño rosa)
-                                        if (
-                                            pillsOfMonth.pillsOfMonth.any {
+                                        if (pillsOfMonth.pillsOfMonth.any {
                                                 LocalDate.parse(it.day_taken) == day.date &&
                                                         it.status == "taken"
-                                            }
-                                        ) {
+                                            }) {
                                             Box(
                                                 modifier = Modifier
                                                     .size(8.dp)
@@ -349,8 +325,7 @@ fun CalendarScreen(
                                             }
                                         }
 
-                                        // Observaciones (cuadrado amarillo)
-                                        if (                                            pillsOfMonth.pillsOfMonth.any {
+                                        if (pillsOfMonth.pillsOfMonth.any {
                                                 LocalDate.parse(it.day_taken) == day.date &&
                                                         it.complications != null
                                             }) {
@@ -363,7 +338,6 @@ fun CalendarScreen(
                                         }
                                     }
                                 } else {
-                                    // Espaciador para días fuera del mes
                                     Spacer(modifier = Modifier.height(12.dp))
                                 }
                             }
@@ -376,7 +350,6 @@ fun CalendarScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Leyenda de simbología simplificada
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -466,8 +439,9 @@ fun CalendarScreen(
             cycleViewModel = cycleViewModel
         )
     }
-
 }
+
+
 
 @Composable
 fun PillEditDialog(
@@ -486,11 +460,15 @@ fun PillEditDialog(
 
     var hour by remember { mutableStateOf("") }
     var observationText by remember { mutableStateOf("") }
+    var isHourValid by remember { mutableStateOf(true) }
 
     val pill = uiState.pillOfDay
     val cycle = activeCycleResult?.getOrNull()
 
-
+    // Validación de hora
+    fun isValidHourFormat(input: String): Boolean {
+        return Regex("^([01]?[0-9]|2[0-3]):[0-5][0-9]").matches(input)
+    }
 
     // Carga valores si ya existe la pastilla
     LaunchedEffect(pill) {
@@ -514,14 +492,20 @@ fun PillEditDialog(
         },
         text = {
             Column(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text("Hora (HH:mm)", color = Pink, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                 OutlinedTextField(
                     value = hour,
                     label = { Text("Hora de toma", color = Black.copy(alpha = 0.4f)) },
-                    onValueChange = { hour = it },
+                    onValueChange = {
+                        hour = it
+                        isHourValid = it.isBlank() || isValidHourFormat(it)
+                    },
+                    isError = !isHourValid,
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
@@ -530,10 +514,20 @@ fun PillEditDialog(
                     colors = TextFieldDefaults.colors(
                         focusedIndicatorColor = Pink,
                         focusedLabelColor = Pink,
+                        errorIndicatorColor = Color.Red,
                         unfocusedContainerColor = Color.Transparent,
                         focusedContainerColor = Color.Transparent
                     )
                 )
+
+                if (!isHourValid) {
+                    Text(
+                        "Formato inválido. Usa HH:mm",
+                        color = Color.Red,
+                        fontSize = 12.sp,
+                        modifier = Modifier.align(Alignment.Start)
+                    )
+                }
 
                 Spacer(Modifier.height(12.dp))
 
@@ -563,18 +557,22 @@ fun PillEditDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    pill?.let {
-                        // Si ya existe la pastilla, se edita
-                        pillViewModel.editPill(it.id.toString(), hour,"taken", observationText.ifBlank { null })
+                    if (!isHourValid) return@Button
 
+                    pill?.let {
+                        pillViewModel.editPill(
+                            it.id.toString(),
+                            hour.ifBlank { null },
+                            "taken",
+                            observationText.ifBlank { null }
+                        )
                         pillViewModel.loadPillsOfMonth(date.year, date.monthValue)
                     } ?: run {
-                        // Si no existe, se crea
                         cycle?.let {
                             pillViewModel.takePill(
                                 cycleId = it.id.toString(),
                                 date = date,
-                                hour_taken = if (hour.isBlank()) null else hour,
+                                hour_taken = hour.ifBlank { null },
                                 status = "taken",
                                 complications = observationText.ifBlank { null }
                             )
@@ -603,4 +601,3 @@ fun PillEditDialog(
         }
     )
 }
-
